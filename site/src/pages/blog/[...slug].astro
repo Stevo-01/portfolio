@@ -11,7 +11,8 @@ import AuthorBox from '../../components/article/AuthorBox.astro';
 import RelatedGrid from '../../components/article/RelatedGrid.astro';
 import SeriesNav from '../../components/article/SeriesNav.astro';
 
-import { findSeries } from '../../components/journal/taxonomy';
+import StructuredData from '../../components/seo/StructuredData.astro';
+import { CATEGORY_ART, findSeries } from '../../components/journal/taxonomy';
 import { getPublishedPosts, ogImageUrl } from '../../lib';
 
 import '../../styles/prose.css';
@@ -39,6 +40,12 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post);
 const minutesRead = remarkPluginFrontmatter?.minutesRead as number | undefined;
 
 const series = await findSeries(data.series);
+
+const crumbs = [
+  { name: 'Journal', path: '/blog/' },
+  { name: CATEGORY_ART[data.category].title, path: `/blog/category/${data.category}/` },
+  { name: data.title, path: `/blog/${post.id}/` },
+];
 ---
 
 <ArticleLayout
@@ -47,6 +54,14 @@ const series = await findSeries(data.series);
   ogImage={ogImageUrl(post.id)}
   headings={headings}
 >
+  <StructuredData
+    slot="head"
+    kind="article"
+    post={post}
+    crumbs={crumbs}
+    ogImage={ogImageUrl(post.id)}
+  />
+
   <ArticleToc slot="toc" headings={headings} />
 
   <article>
