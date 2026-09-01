@@ -1,0 +1,121 @@
+---
+import Reveal from '../ui/Reveal.astro';
+import Section from './Section.astro';
+import SectionHeading from './SectionHeading.astro';
+import { philosophy } from '../../data/philosophy';
+import { headings } from '../../data/sections';
+---
+
+<Section id="philosophy" band="surface">
+  <SectionHeading heading={headings.philosophy} lead={philosophy.lead} />
+
+  <ol class="principles">
+    {
+      philosophy.principles.map((p, i) => (
+        <li>
+          <Reveal delay={(i % 2) * 60}>
+            <article class="card principle">
+              <p class="num">{p.num}</p>
+              <h3>{p.title}</h3>
+              <p class="body">{p.body}</p>
+            </article>
+          </Reveal>
+        </li>
+      ))
+    }
+  </ol>
+
+  <aside class="interests card">
+    <h3>{philosophy.interests.heading}</h3>
+    <ul>
+      {
+        philosophy.interests.items.map((item) => (
+          <li>
+            <span class="label">{item.label}</span>
+            {item.note && <span class="note">{item.note}</span>}
+          </li>
+        ))
+      }
+    </ul>
+  </aside>
+</Section>
+
+<style>
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .principles > li,
+  .principles :global(.reveal) {
+    display: grid;
+  }
+
+  .principle {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+  }
+
+  .num {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+  }
+
+  .principle h3 {
+    font-size: 18px;
+  }
+
+  .body {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .interests {
+    margin-top: var(--space-6);
+  }
+
+  .interests h3 {
+    margin-bottom: var(--space-4);
+    font-size: 16px;
+  }
+
+  .interests ul {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .interests li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+
+  .label {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .note {
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  @media (max-width: 900px) {
+    .principles {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

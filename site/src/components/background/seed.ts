@@ -84,8 +84,13 @@ export interface DriftSeed {
  * strips above and below the copy, which works at every width, where side
  * gutters would vanish the moment the container stops being narrower than the
  * viewport.
+ *
+ * The vertical bounds were widened from 26–74 when the hero became centred:
+ * centring stacks the pill, greeting, headline, lead, location and CTA row
+ * around the middle, which grew the occupied band to 23–77 and left an icon
+ * crossing the buttons. 20–80 restores the margin.
  */
-export const EXCLUSION = { x0: 8, x1: 92, y0: 26, y1: 74 };
+export const EXCLUSION = { x0: 8, x1: 92, y0: 20, y1: 80 };
 
 function outsideExclusion(x: number, y: number): boolean {
   return x < EXCLUSION.x0 || x > EXCLUSION.x1 || y < EXCLUSION.y0 || y > EXCLUSION.y1;

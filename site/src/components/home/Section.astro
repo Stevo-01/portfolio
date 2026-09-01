@@ -1,0 +1,19 @@
+---
+import Container from '../ui/Container.astro';
+
+interface Props {
+  id: string;
+  /** Alternating bands. `surface` paints --surface behind the section. */
+  band?: 'bg' | 'surface';
+  wide?: boolean;
+  class?: string;
+}
+
+const { id, band = 'bg', wide, class: className } = Astro.props;
+---
+
+<section id={id} class:list={['section-band', className]} data-band={band}>
+  <Container wide={wide}>
+    <slot />
+  </Container>
+</section>
