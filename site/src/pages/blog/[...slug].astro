@@ -1,0 +1,132 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import Icon from '../../components/ui/Icon.astro';
+
+import ArticleHero from '../../components/article/ArticleHero.astro';
+import ArticleToc from '../../components/article/ArticleToc.astro';
+import AuthorBox from '../../components/article/AuthorBox.astro';
+import RelatedGrid from '../../components/article/RelatedGrid.astro';
+import SeriesNav from '../../components/article/SeriesNav.astro';
+
+import { findSeries } from '../../components/journal/taxonomy';
+import { getPublishedPosts, ogImageUrl } from '../../lib';
+
+import '../../styles/prose.css';
+
+/**
+ * Paths come from getPublishedPosts(), not getCollection('blog'). That is the
+ * only place the draft filter lives, so routing through it is what keeps a
+ * draft from getting its own URL.
+ */
+export const getStaticPaths = (async () => {
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}) satisfies GetStaticPaths;
+
+const { post } = Astro.props;
+const { data } = post;
+
+// `headings` and `remarkPluginFrontmatter` both come from render(). minutesRead
+// is injected by the remark plugin at build time and is deliberately absent
+// from the Zod schema, so this is the only place it can be read.
+const { Content, headings, remarkPluginFrontmatter } = await render(post);
+const minutesRead = remarkPluginFrontmatter?.minutesRead as number | undefined;
+
+const series = await findSeries(data.series);
+---
+
+<ArticleLayout
+  title={`${data.title} | The Engineering Journal`}
+  description={data.description}
+  ogImage={ogImageUrl(post.id)}
+  headings={headings}
+>
+  <ArticleToc slot="toc" headings={headings} />
+
+  <article>
+    <ArticleHero post={post} minutesRead={minutesRead} seriesTitle={series?.data.title} />
+
+    {/*
+      `.prose` scopes the reading stylesheet. The wrapper below also gets a
+      client-free table fix: markdown emits bare <table> elements, and a table
+      wider than the measure would otherwise force the whole page to scroll
+      sideways. See the script at the end of this file.
+    */}
+    <div class="prose" data-prose>
+      <Content />
+    </div>
+
+    <footer class="tail">
+      {
+        series && data.series && (
+          <SeriesNav post={post} seriesSlug={data.series} seriesTitle={series.data.title} />
+        )
+      }
+
+      <AuthorBox />
+
+      <a class="back" href="/blog/">
+        <Icon name="arrow-left" size={15} />
+        <span>Back to the journal</span>
+      </a>
+    </footer>
+  </article>
+
+  {/* Named slot on ArticleLayout: full-bleed, inside <main>, before the footer.
+      As a sibling of the layout it rendered after the site footer entirely. */}
+  <RelatedGrid post={post} slot="after" />
+</ArticleLayout>
+
+<style>
+  article {
+    padding-bottom: var(--space-7);
+  }
+
+  .tail {
+    display: grid;
+    gap: var(--space-6);
+    /* Matches the prose measure; see the note in prose.css. */
+    max-width: 53ch;
+    margin-top: var(--space-8);
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--accent);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .back:hover {
+    color: var(--accent-strong);
+  }
+</style>
+
+<script>
+  /*
+    Markdown emits bare <table> elements with nowhere to attach an overflow
+    container, and a table wider than the 68ch measure makes the entire page
+    scroll sideways rather than the table.
+
+    Wrapping at runtime rather than with a rehype plugin keeps this inside the
+    paths this slice owns: a rehype plugin would mean editing astro.config.mjs,
+    which belongs to slice 00. The cost is a few hundred bytes and one DOM pass
+    on articles that contain tables.
+  */
+  for (const table of document.querySelectorAll<HTMLTableElement>('[data-prose] table')) {
+    if (table.parentElement?.classList.contains('table-scroll')) continue;
+    const wrap = document.createElement('div');
+    wrap.className = 'table-scroll';
+    table.replaceWith(wrap);
+    wrap.appendChild(table);
+  }
+</script>
