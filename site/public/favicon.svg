@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Stephen Adedigba">
+  <rect width="32" height="32" rx="7" fill="#191210"/>
+  <g fill="none" stroke="#FB923C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 8h5M7 16h5M7 24h5"/>
+    <path d="M12 8c7 0 7 8 7 8s0-8 7-8"/>
+    <path d="M12 24c7 0 7-8 7-8"/>
+  </g>
+  <circle cx="25" cy="16" r="2.6" fill="#FDBA74"/>
+</svg>

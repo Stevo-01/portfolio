@@ -1,0 +1,5 @@
+# Feeds /blog/category/mlops/, the CategoryTabs strip and the discipline grid.
+slug: mlops
+title: "MLOps"
+description: "Getting a model out of a notebook and keeping it running: packaging, pipelines, run tracking, and deployment."
+order: 3

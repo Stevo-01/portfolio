@@ -1,0 +1,85 @@
+##############################################################################
+# site-ci — checks on every PR that touches the site.
+#
+# No AWS credentials anywhere in this workflow. It builds and inspects, it does
+# not deploy, so it needs no cloud access at all and is safe to run on a PR
+# from a fork.
+##############################################################################
+
+name: site-ci
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/site-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: site/.nvmrc
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      # ci, not install: install would silently rewrite the lockfile and let a
+      # dependency drift between what was reviewed and what is built.
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx astro check
+
+      - name: Build
+        run: npm run build
+
+      - name: No hardcoded colours
+        # tokens.css is the only file permitted to hold a hex value. This is
+        # trivially easy to break by accident and tedious to unpick later.
+        run: npm run no-hex
+
+      - name: Drafts must not reach the build
+        run: |
+          if grep -rl "This draft must never appear" dist/ ; then
+            echo "::error::A draft post reached dist/. The filter in getPublishedPosts() was bypassed."
+            exit 1
+          fi
+          echo "No drafts in dist/."
+
+      - name: Size budgets
+        working-directory: .
+        run: node scripts/budgets.mjs --check
+
+      - name: CSP hashes match the build
+        # A stale hash blocks the inline theme script in the browser with
+        # nothing failing server-side, so this has to be checked mechanically.
+        working-directory: .
+        run: node scripts/csp-hashes.mjs --check
+
+      - name: Lighthouse
+        working-directory: .
+        # The local binary, never `npx lhci`. `lhci` on npm is an unrelated
+        # squatted package; the real one is `@lhci/cli`, already a devDependency.
+        run: ./site/node_modules/.bin/lhci autorun --config=.github/lighthouserc.json
+
+      - name: Structured data is actually rendered
+        # Authoring JSON-LD and never referencing the component is a silent
+        # failure: the page looks identical either way.
+        run: |
+          test "$(grep -c 'application/ld+json' dist/index.html)" -ge 1 \
+            || { echo "::error::No JSON-LD on the homepage."; exit 1; }

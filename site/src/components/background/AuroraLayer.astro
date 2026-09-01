@@ -1,0 +1,94 @@
+---
+interface Props {
+  density?: 'full' | 'subtle';
+}
+
+const { density = 'full' } = Astro.props;
+---
+
+<div class="aurora" data-density={density} aria-hidden="true">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <span class="blob blob-3"></span>
+</div>
+
+<style>
+  .aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    /* blur() is set once and never animated. Animating a filter repaints the
+       whole blob every frame; animating transform composites it. */
+    filter: blur(60px);
+    will-change: transform;
+  }
+
+  /* Only transform and scale animate. Never background-position, width, or a
+     gradient stop: each of those repaints on every frame. */
+  .blob-1 {
+    top: -12%;
+    left: 2%;
+    width: min(78vw, 900px);
+    aspect-ratio: 1;
+    background: radial-gradient(circle, var(--glow-peach), transparent 68%);
+    animation: drift-a 22s var(--ease) infinite alternate;
+  }
+
+  .blob-2 {
+    top: 8%;
+    right: -8%;
+    width: min(66vw, 780px);
+    aspect-ratio: 1;
+    background: radial-gradient(circle, var(--glow-apricot), transparent 66%);
+    animation: drift-b 28s var(--ease) infinite alternate;
+  }
+
+  .blob-3 {
+    bottom: -22%;
+    left: 32%;
+    width: min(86vw, 1000px);
+    aspect-ratio: 1;
+    background: radial-gradient(circle, var(--glow-deep), transparent 70%);
+    animation: drift-c 34s var(--ease) infinite alternate;
+  }
+
+  /* Three different periods, none a multiple of another, so the blobs never
+     resync into a visible pulse. */
+  @keyframes drift-a {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(6%, 8%, 0) scale(1.12); }
+  }
+
+  @keyframes drift-b {
+    from { transform: translate3d(0, 0, 0) scale(1.06); }
+    to   { transform: translate3d(-8%, 5%, 0) scale(0.94); }
+  }
+
+  @keyframes drift-c {
+    from { transform: translate3d(0, 0, 0) scale(0.96); }
+    to   { transform: translate3d(4%, -7%, 0) scale(1.1); }
+  }
+
+  .aurora[data-density='subtle'] .blob {
+    opacity: 0.55;
+  }
+
+  /* Static composition, not a frozen frame: the blobs settle at a deliberate
+     resting arrangement. global.css also zeroes durations, so this is the
+     belt to that braces. */
+  @media (prefers-reduced-motion: reduce) {
+    .blob {
+      animation: none;
+      will-change: auto;
+    }
+
+    .blob-1 { transform: translate3d(3%, 4%, 0) scale(1.06); }
+    .blob-2 { transform: translate3d(-4%, 2%, 0) scale(1); }
+    .blob-3 { transform: translate3d(2%, -3%, 0) scale(1.03); }
+  }
+</style>

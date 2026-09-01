@@ -1,0 +1,110 @@
+---
+import Tag from '../ui/Tag.astro';
+import type { Job } from '../../types/portfolio';
+
+interface Props {
+  job: Job;
+}
+
+const { job } = Astro.props;
+---
+
+<article class="card job">
+  {/*
+    A GRID, not a flex row with wrap. With flex, a long company name pushes the
+    date and location onto their own line instead of holding them top-right, and
+    "University Malaysia Sarawak (UNIMAS)" is long enough to trigger it at most
+    widths. minmax(0,1fr) lets the title column shrink and wrap while the meta
+    column stays pinned.
+  */}
+  <header class="job-head">
+    <div class="job-title">
+      <h3>{job.role}</h3>
+      <p class="company">{job.company}</p>
+    </div>
+    <div class="job-meta">
+      <p class="period">{job.start} &ndash; {job.end}</p>
+      <p class="location">{job.location}</p>
+    </div>
+  </header>
+
+  <div class="job-blocks">
+    {
+      job.blocks.map((block) => (
+        <section class="block">
+          <h4>{block.heading}</h4>
+          <ul class="accent-list">
+            {block.bullets.map((b) => (
+              <li>{b}</li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+
+  <footer class="tag-row">
+    {job.tech.map((t) => <Tag label={t} />)}
+  </footer>
+</article>
+
+<style>
+  .job {
+    display: grid;
+    gap: var(--space-5);
+    text-align: start;
+  }
+
+  .job-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2) var(--space-5);
+    align-items: start;
+  }
+
+  .job-title h3 {
+    font-size: 20px;
+  }
+
+  .company {
+    margin-top: 2px;
+    color: var(--accent-strong);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .job-meta {
+    text-align: end;
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    white-space: nowrap;
+  }
+
+  .job-blocks {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .block h4 {
+    margin-bottom: var(--space-3);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+
+  @media (max-width: 900px) {
+    /* Below the timeline breakpoint the meta drops under the title on purpose:
+       there is no longer room to hold it right, and forcing it there produces a
+       two-character-wide title column. */
+    .job-head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .job-meta {
+      text-align: start;
+      white-space: normal;
+    }
+  }
+</style>

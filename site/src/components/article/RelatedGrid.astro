@@ -1,0 +1,75 @@
+---
+import CardGrid from '../journal/CardGrid.astro';
+import Container from '../ui/Container.astro';
+import Icon from '../ui/Icon.astro';
+import SectionRail from '../journal/SectionRail.astro';
+import { getRelatedPosts } from '../../lib';
+import type { Post } from '../../types/content';
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+
+// getRelatedPosts already excludes the current article and ranks by shared
+// tags with category as a tiebreak, topping up from recent posts so the strip
+// is never short. With only four published posts it will usually return all
+// three others.
+const related = await getRelatedPosts(post, 3);
+---
+
+{
+  related.length > 0 && (
+    <section class="related">
+      <Container>
+        <div class="head">
+          <SectionRail title="More from the journal" />
+          <a class="all" href="/blog/">
+            <span>View all</span>
+            <Icon name="arrow-right" size={14} />
+          </a>
+        </div>
+
+        <CardGrid posts={related} />
+      </Container>
+    </section>
+  )
+}
+
+<style>
+  .related {
+    padding-block: var(--space-8);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  /* SectionRail carries its own bottom margin; the flex row would otherwise
+     leave the link sitting above the rule. */
+  .head :global(.rail) {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .all:hover {
+    color: var(--accent-strong);
+  }
+</style>

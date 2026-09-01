@@ -1,0 +1,122 @@
+---
+import Container from '../ui/Container.astro';
+import Icon from '../ui/Icon.astro';
+import { profile } from '../../data/profile';
+
+const year = new Date().getFullYear();
+
+const links = [
+  { label: 'Portfolio', href: '/' },
+  { label: 'All articles', href: '/blog/' },
+  { label: 'Contact', href: '/#contact' },
+];
+---
+
+{/*
+  The journal footer, and it is deliberately nothing like SiteFooter.
+
+  With one typeface across the whole site, the journal has to read as its own
+  publication through layout alone. This is one of the places that happens: a
+  publication name at heading scale, a standfirst, its own navigation, a rule,
+  and only then the copyright. The portfolio footer is a single quiet row. Put
+  them side by side and they are obviously different documents, which is the
+  entire point.
+*/}
+<footer class="journal-footer">
+  <Container>
+    <p class="masthead">
+      The Engineering <span class="accent">Journal</span>
+    </p>
+    <p class="standfirst">
+      Notes on retrieval, language models, and getting a model out of a notebook
+      and in front of somebody. Written by {profile.name}.
+    </p>
+
+    <nav class="journal-nav" aria-label="Journal">
+      <ul>
+        {links.map((link) => (
+          <li><a href={link.href}>{link.label}</a></li>
+        ))}
+        <li>
+          <a href="/rss.xml">
+            <Icon name="rss" size={14} />
+            <span>RSS</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <hr class="section-rule" />
+
+    <p class="journal-copy">&copy; {year} {profile.name}</p>
+  </Container>
+</footer>
+
+<style>
+  .journal-footer {
+    border-top: 1px solid var(--border);
+    padding-block: var(--space-8) var(--space-7);
+    background: var(--surface);
+  }
+
+  /* Larger than anything the portfolio footer would use. The scale jump is the
+     signal that you are in a different publication. */
+  .masthead {
+    font-size: clamp(30px, 3.6vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+  }
+
+  .masthead .accent {
+    background: linear-gradient(92deg, var(--accent-strong), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .standfirst {
+    max-width: 54ch;
+    margin-top: var(--space-4);
+    color: var(--muted);
+    font-size: 15.5px;
+  }
+
+  .journal-nav {
+    margin-top: var(--space-6);
+  }
+
+  .journal-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .journal-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 14.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--dur-ui) var(--ease);
+  }
+
+  .journal-nav a:hover {
+    color: var(--accent-strong);
+  }
+
+  .section-rule {
+    margin-block: var(--space-6);
+  }
+
+  .journal-copy {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+  }
+</style>

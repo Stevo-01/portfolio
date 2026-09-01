@@ -1,0 +1,109 @@
+---
+import JobCard from './JobCard.astro';
+import Reveal from '../ui/Reveal.astro';
+import Section from './Section.astro';
+import SectionHeading from './SectionHeading.astro';
+import { jobs } from '../../data/experience';
+import { headings } from '../../data/sections';
+---
+
+<Section id="experience">
+  <SectionHeading heading={headings.experience} />
+
+  <ol class="timeline">
+    {
+      jobs.map((job, i) => (
+        <li class="entry" data-side={i % 2 === 0 ? 'start' : 'end'}>
+          <span class="dot" aria-hidden="true" />
+          <Reveal delay={i * 60}>
+            <JobCard job={job} />
+          </Reveal>
+        </li>
+      ))
+    }
+  </ol>
+</Section>
+
+<style>
+  .timeline {
+    position: relative;
+    display: grid;
+    gap: var(--space-7);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The rail. A pseudo-element rather than a real node so it cannot be read as
+     a list item by a screen reader. */
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    margin-left: -0.5px;
+    background: var(--border);
+  }
+
+  .entry {
+    position: relative;
+    display: grid;
+    /* Two tracks with the rail down the middle; each entry occupies one side
+       and leaves the other empty. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--space-8);
+  }
+
+  .entry[data-side='start'] > :global(*:not(.dot)) {
+    grid-column: 1;
+  }
+
+  .entry[data-side='end'] > :global(*:not(.dot)) {
+    grid-column: 2;
+  }
+
+  .dot {
+    position: absolute;
+    top: var(--space-6);
+    left: 50%;
+    z-index: 1;
+    width: 11px;
+    height: 11px;
+    margin-left: -5.5px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    /* Ringed in --bg so the rail appears to pass behind the dot rather than
+       through it. */
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+
+  /*
+    Below 900px the centre rail becomes a left rail. This is the most
+    breakage-prone layout on the page: the rail, the dot offset and the column
+    assignment all have to move together, and getting one of the three wrong
+    leaves a dot floating in the middle of nothing.
+  */
+  @media (max-width: 900px) {
+    .timeline::before {
+      left: 5px;
+      margin-left: 0;
+    }
+
+    .entry {
+      grid-template-columns: minmax(0, 1fr);
+      padding-inline-start: var(--space-6);
+    }
+
+    .entry[data-side='start'] > :global(*:not(.dot)),
+    .entry[data-side='end'] > :global(*:not(.dot)) {
+      grid-column: 1;
+    }
+
+    .dot {
+      left: 0;
+      margin-left: 0;
+    }
+  }
+</style>

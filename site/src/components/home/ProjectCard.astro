@@ -1,0 +1,51 @@
+---
+import Tag from '../ui/Tag.astro';
+import type { Project } from '../../types/portfolio';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+<article class="card project">
+  <h3>{project.title}</h3>
+  <p class="company">{project.company}</p>
+  <p class="summary">{project.summary}</p>
+
+  <ul class="accent-list">
+    {project.highlights.map((h) => <li>{h}</li>)}
+  </ul>
+
+  <footer class="tag-row">
+    {project.tech.map((t) => <Tag label={t} />)}
+  </footer>
+</article>
+
+<style>
+  .project {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  .project h3 {
+    font-size: 19px;
+  }
+
+  .company {
+    color: var(--accent-strong);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .summary {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .accent-list {
+    font-size: 14.5px;
+  }
+</style>

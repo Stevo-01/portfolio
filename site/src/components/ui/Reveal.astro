@@ -1,0 +1,130 @@
+---
+interface Props {
+  /** Stagger in ms. Siblings usually go 0, 60, 120, … */
+  delay?: number;
+  class?: string;
+  as?: 'div' | 'li' | 'article' | 'section';
+}
+
+const { delay = 0, class: className, as: Tag = 'div' }: Props = Astro.props;
+---
+
+<Tag
+  class:list={['reveal', className]}
+  data-reveal
+  style={delay ? `--reveal-delay:${delay}ms` : undefined}
+>
+  <slot />
+</Tag>
+
+<style>
+  /*
+    Scoped to `scripting: enabled` on purpose. The hidden state is only safe to
+    apply if something will later un-hide it — with JavaScript blocked, an
+    unconditional `opacity: 0` here would make the entire page invisible.
+    Browsers that do not know this media feature fail the query, so they skip
+    the hiding and render everything in final state. Both failure directions
+    land on "content is visible", which is the only acceptable one.
+  */
+  @media (scripting: enabled) {
+    .reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      transition:
+        opacity var(--dur-reveal) var(--ease) var(--reveal-delay, 0ms),
+        transform var(--dur-reveal) var(--ease) var(--reveal-delay, 0ms);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /*
+      Belt and braces with the script below. The script skips observing under
+      reduced motion, but if it fails to run at all this rule still leaves the
+      content visible rather than permanently hidden.
+    */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+  }
+</style>
+
+<script>
+  /*
+    ONE observer for every Reveal on the page, not one per instance. Astro
+    hoists and bundles this block once no matter how many times the component
+    renders, so `querySelectorAll` here sees the whole page — which is the
+    point. A per-instance observer would mean thirty observers on the homepage
+    for no benefit.
+
+    Reduced motion is checked BEFORE any observer is constructed. Building one
+    and then declining to act on it would still schedule work; the preference
+    means "do not animate", so the honest response is to jump straight to the
+    final state and never observe at all.
+  */
+  const targets = document.querySelectorAll<HTMLElement>('[data-reveal]');
+
+  if (targets.length > 0) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      targets.forEach((el) => el.classList.add('is-visible'));
+    } else {
+      const pending = new Set(targets);
+
+      const show = (el: HTMLElement) => {
+        el.classList.add('is-visible');
+        pending.delete(el);
+        observer.unobserve(el);
+        if (pending.size === 0) {
+          // Nothing left to watch. Tear the whole thing down rather than
+          // leaving an observer and a scroll listener alive for the session.
+          observer.disconnect();
+          window.removeEventListener('scroll', sweep);
+          window.removeEventListener('hashchange', sweep);
+        }
+      };
+
+      /*
+        The safety net, and it is not optional.
+
+        IntersectionObserver only reports THRESHOLD CROSSINGS. Jump the viewport
+        straight past an element -- which is exactly what every anchor link in
+        the header does -- and it goes from below the viewport to above it
+        without ever producing an intersecting frame. No callback is delivered,
+        so the element keeps `opacity: 0` for the rest of the session. Clicking
+        "Contact" in the nav and then scrolling back up would leave whole
+        sections permanently blank.
+
+        This sweep reveals anything the viewport has already reached or passed.
+        It runs passively, and it removes itself once nothing is pending.
+      */
+      function sweep(): void {
+        for (const el of pending) {
+          if (el.getBoundingClientRect().top < window.innerHeight) show(el);
+        }
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            // Fires once. Without unobserving, scrolling back up re-triggers
+            // the transition and the page feels twitchy.
+            show(entry.target as HTMLElement);
+          }
+        },
+        { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+      );
+
+      targets.forEach((el) => observer.observe(el));
+
+      window.addEventListener('scroll', sweep, { passive: true });
+      window.addEventListener('hashchange', sweep);
+    }
+  }
+</script>

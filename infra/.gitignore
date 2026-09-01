@@ -1,0 +1,19 @@
+# Provider binaries and module caches. Hundreds of megabytes.
+.terraform/
+
+# State must never be committed: it carries account ids, resource ARNs and,
+# for some providers, secrets in plaintext. The S3 backend holds it instead.
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Plan output can contain the same data as state.
+*.tfplan
+*.tfplan.*
+
+# Local variable overrides.
+*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf

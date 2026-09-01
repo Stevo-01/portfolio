@@ -1,0 +1,9 @@
+# Feeds /blog/category/llms-and-rag/, the CategoryTabs strip and the discipline
+# grid on /blog/. Article counts are derived at build time.
+#
+# Named for the pair rather than for "LLMs" alone: retrieval is half the work
+# and the half that decides whether the output can be trusted.
+slug: llms-and-rag
+title: "LLMs & RAG"
+description: "Working with language models in earnest: retrieval, grounding, fine-tuning, and what each one is actually for."
+order: 2

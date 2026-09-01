@@ -1,0 +1,63 @@
+---
+import Container from '../ui/Container.astro';
+import Reveal from '../ui/Reveal.astro';
+import SectionHeading from './SectionHeading.astro';
+import SkillCard from './SkillCard.astro';
+import SkillMarquee from './SkillMarquee.astro';
+import { headings } from '../../data/sections';
+import { skillGroups } from '../../data/skills';
+---
+
+{/*
+  This section builds its own band rather than using <Section>, because the
+  marquee has to run edge to edge while the heading and grid stay inside the
+  container. Wrapping the whole thing in one Container would cage the marquee;
+  using two Sections would pay the vertical padding twice and leave the marquee
+  floating in an unexplained gap between them.
+*/}
+<section id="skills" class="section-band">
+  <Container>
+    <SectionHeading heading={headings.skills} />
+  </Container>
+
+  <SkillMarquee />
+
+  <Container>
+    <div class="grid">
+      {
+        skillGroups.map((group, i) => (
+          <Reveal delay={(i % 3) * 60}>
+            <SkillCard group={group} />
+          </Reveal>
+        ))
+      }
+    </div>
+  </Container>
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+
+  /* Reveal is the grid item, so its card must fill it or cards in a row end up
+     ragged. */
+  .grid :global(.reveal) {
+    display: grid;
+  }
+
+  @media (max-width: 1000px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

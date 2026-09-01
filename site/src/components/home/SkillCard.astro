@@ -1,0 +1,70 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { SkillGroup } from '../../types/portfolio';
+
+interface Props {
+  group: SkillGroup;
+}
+
+const { group } = Astro.props;
+---
+
+<article class="card skill">
+  {/*
+    Icon INLINE with the heading, not stacked above it. Stacked, the icon reads
+    as decoration and the card grows a wasted row; inline, it reads as a label
+    for the heading it sits beside.
+  */}
+  <h3>
+    <Icon name={group.icon} size={18} />
+    <span>{group.title}</span>
+  </h3>
+
+  <ul>
+    {group.items.map((item) => <li>{item}</li>)}
+  </ul>
+</article>
+
+<style>
+  .skill {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    padding: var(--space-5);
+  }
+
+  .skill h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+  }
+
+  .skill h3 :global(svg) {
+    color: var(--accent);
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+
+  /* A dot between items rather than a chip each. Ten chips per card across ten
+     cards is a hundred bordered boxes, which turns the section into noise. */
+  li:not(:last-child)::after {
+    content: '·';
+    margin-inline-start: var(--space-2);
+    color: var(--border-strong);
+  }
+</style>

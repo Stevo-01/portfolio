@@ -1,0 +1,52 @@
+---
+import PortfolioLayout from '../layouts/PortfolioLayout.astro';
+import StructuredData from '../components/seo/StructuredData.astro';
+
+import About from '../components/home/About.astro';
+import Contact from '../components/home/Contact.astro';
+import Education from '../components/home/Education.astro';
+import Experience from '../components/home/Experience.astro';
+import Hero from '../components/home/Hero.astro';
+import Philosophy from '../components/home/Philosophy.astro';
+import Projects from '../components/home/Projects.astro';
+import Skills from '../components/home/Skills.astro';
+
+import { meta } from '../data/site';
+
+import '../components/home/home.css';
+---
+
+{/*
+  Eight sections. The brief lists nine, including testimonials; there is
+  deliberately no testimonials section here and no data for one. An empty
+  section renumbered around is a permanent oddity, and quotes can be added later
+  as a small change. See docs/plans/CONTENT-MAP.md §9.
+
+  Bands alternate --bg and --surface. Each section owns its own band via the
+  `band` prop rather than the page assigning them, so reordering sections does
+  not require rechecking the whole sequence:
+
+    hero        --hero-bg
+    about       surface
+    experience  bg
+    projects    surface
+    skills      bg
+    philosophy  surface
+    education   bg
+    contact     surface
+*/}
+<PortfolioLayout title={meta.title} description={meta.description}>
+  {/* Person JSON-LD. Rendered through the head slot: authoring structured
+      data and never referencing the component is a silent failure, because the
+      page looks identical either way. */}
+  <StructuredData slot="head" kind="person" />
+
+  <Hero />
+  <About />
+  <Experience />
+  <Projects />
+  <Skills />
+  <Philosophy />
+  <Education />
+  <Contact />
+</PortfolioLayout>

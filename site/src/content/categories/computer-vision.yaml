@@ -1,0 +1,6 @@
+# Feeds /blog/category/computer-vision/, the CategoryTabs strip and the
+# discipline grid.
+slug: computer-vision
+title: "Computer Vision"
+description: "Detection and recognition, and what changes when the input is pixels."
+order: 5

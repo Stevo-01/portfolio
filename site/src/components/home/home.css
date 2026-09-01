@@ -1,0 +1,111 @@
+/* ============================================================================
+   home.css — the card and interaction system shared across homepage sections.
+   Owned by slice 03. Imported once by index.astro.
+
+   Scoped <style> blocks are the default in this project. This file exists
+   because the card treatment repeats across six sections, and six copies of the
+   same hover rule drift apart within a week. Anything used by only one section
+   stays in that component.
+
+   No hex values. Tokens only.
+   ============================================================================ */
+
+/* --- The card ------------------------------------------------------------
+   One definition. Every card type on the homepage is this plus a modifier, so
+   the hover behaviour is identical everywhere by construction rather than by
+   discipline. */
+
+.card {
+  position: relative;
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--dur-ui) var(--ease),
+    border-color var(--dur-ui) var(--ease),
+    box-shadow var(--dur-ui) var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow: var(--glow-card-hover);
+}
+
+/* A 1px gradient hairline along the top edge. Reserved for featured cards:
+   putting it on everything removes the signal that anything is featured. */
+.card-featured::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: var(--edge-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover {
+    transform: none;
+  }
+}
+
+/* --- Section rhythm ------------------------------------------------------ */
+
+.section-band {
+  padding-block: var(--section-y);
+}
+
+/* Alternating bands. Ten thousand pixels of one flat colour reads as a single
+   endless page; the change of surface is what gives it chapters. */
+.section-band[data-band='surface'] {
+  background: var(--surface);
+}
+
+/* --- Small shared pieces ------------------------------------------------- */
+
+.meta-line {
+  color: var(--soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+}
+
+.body-copy {
+  color: var(--muted);
+  max-width: 68ch;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Bullet lists with an accent marker, used by job blocks and highlight lists. */
+.accent-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+}
+
+.accent-list > li {
+  position: relative;
+  padding-inline-start: var(--space-5);
+}
+
+.accent-list > li::before {
+  content: '';
+  position: absolute;
+  /* 0.65em rather than a fixed px offset, so the dot tracks the first line's
+     cap height at any font size. */
+  top: 0.65em;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}

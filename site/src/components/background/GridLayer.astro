@@ -1,0 +1,44 @@
+---
+interface Props {
+  density?: 'full' | 'subtle';
+}
+
+const { density = 'full' } = Astro.props;
+---
+
+<div class="grid" data-density={density} aria-hidden="true"></div>
+
+<style>
+  /* Entirely static. No animation, no JS, no cost beyond one paint. */
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--grid-line) 0 1px,
+        transparent 1px 52px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--grid-line) 0 1px,
+        transparent 1px 52px
+      );
+    /* Fades out toward the edges so the grid never meets a hard border, which
+       is what would make it read as a table rather than as depth. */
+    -webkit-mask-image: radial-gradient(
+      ellipse 78% 62% at 50% 38%,
+      black 0%,
+      transparent 78%
+    );
+    mask-image: radial-gradient(
+      ellipse 78% 62% at 50% 38%,
+      black 0%,
+      transparent 78%
+    );
+  }
+
+  .grid[data-density='subtle'] {
+    opacity: 0.6;
+  }
+</style>

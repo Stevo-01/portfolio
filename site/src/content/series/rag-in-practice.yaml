@@ -1,0 +1,9 @@
+# Feeds /blog/series/rag-in-practice/ and the part navigation on each article.
+# Part count is derived from the posts, not stored here.
+#
+# A post joins by setting BOTH `series: rag-in-practice` and a numeric `part:`.
+# The Zod refinement in content.config.ts rejects one without the other.
+slug: rag-in-practice
+title: "RAG in practice"
+description: "What retrieval-augmented generation actually buys you, where it stops helping, and how to tell the difference before you ship."
+category: llms-and-rag

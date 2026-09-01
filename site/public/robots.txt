@@ -1,0 +1,6 @@
+# Slice 06 replaces this with a generated robots.txt.ts that reads the real
+# host from astro.config. Until the domain is decided (docs/plans/DECISIONS.md
+# D1) there is no absolute sitemap URL to publish, so this stays minimal and
+# deliberately does not point at one.
+User-agent: *
+Allow: /

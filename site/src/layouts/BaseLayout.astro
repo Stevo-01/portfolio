@@ -1,0 +1,78 @@
+---
+import Header from '../components/layout/Header.astro';
+import Seo from '../components/seo/Seo.astro';
+import { THEME_INIT_SCRIPT } from '../lib';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  noindex?: boolean;
+  wide?: boolean;
+}
+
+const { title, description, ogImage, noindex } = Astro.props;
+
+// `Astro.site` is the placeholder host until D1 is answered and slice 09 sets
+// the real one. Falling back here rather than asserting keeps `astro check`
+// honest about the fact that it can be undefined.
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.invalid')
+  .href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    {/*
+      Synchronous, inline, and before every stylesheet. Deferred or moved below
+      a <link rel="stylesheet"> and the page paints dark-then-light for anyone
+      who chose light, on every navigation.
+
+      Copied verbatim from src/lib/theme.ts. Its SHA-256 gets pinned in the CSP
+      at step 4.3, so reformatting this even by a space invalidates the pin and
+      the browser silently refuses to run it.
+    */}
+    <script is:inline set:html={THEME_INIT_SCRIPT} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <title>{title}</title>
+    <Seo
+      title={title}
+      description={description}
+      canonical={canonical}
+      ogImage={ogImage}
+      noindex={noindex}
+    />
+
+    <slot name="head" />
+  </head>
+
+  <body>
+    {/* First focusable element on the page, before the header. */}
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <Header />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <slot name="footer" />
+  </body>
+</html>
+
+<style>
+  main {
+    /* Clears the fixed header. Without this the first section sits underneath
+       it and the hero looks cropped. */
+    padding-top: var(--header-h);
+  }
+</style>

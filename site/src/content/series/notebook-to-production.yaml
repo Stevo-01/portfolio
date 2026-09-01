@@ -1,0 +1,6 @@
+# Feeds /blog/series/notebook-to-production/ and the part navigation on each
+# article. Part count is derived from the posts.
+slug: notebook-to-production
+title: "From notebook to production"
+description: "Packaging, pipelines, run tracking, and the things deployment exposes that running locally never did."
+category: mlops

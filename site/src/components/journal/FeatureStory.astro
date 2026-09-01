@@ -1,0 +1,164 @@
+---
+import Avatar from '../ui/Avatar.astro';
+import CoverArt from './CoverArt.astro';
+import Icon from '../ui/Icon.astro';
+import { CATEGORY_ART } from './taxonomy';
+import { formatDate, isoDate } from '../../lib';
+import { profile } from '../../data/profile';
+import type { Post } from '../../types/content';
+import type { IconName } from '../../types/icons';
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const { data } = post;
+
+const art = CATEGORY_ART[data.category];
+const glyph = (data.heroGlyph as IconName | undefined) ?? art.glyph;
+
+const initials = profile.name
+  .split(' ')
+  .map((part) => part[0])
+  .join('')
+  .slice(0, 2);
+---
+
+<article class="feature">
+  <a class="cover" href={`/blog/${post.id}/`} tabindex="-1" aria-hidden="true">
+    <CoverArt category={data.category} variant="lead" glyph={glyph} />
+  </a>
+
+  <div class="copy">
+    <p class="meta">
+      <span class="kicker">Latest</span>
+      <span class="sep" aria-hidden="true">·</span>
+      <span class="cat">{art.title}</span>
+      <span class="sep" aria-hidden="true">·</span>
+      <time datetime={isoDate(data.publishDate)}>{formatDate(data.publishDate)}</time>
+    </p>
+
+    <h2><a href={`/blog/${post.id}/`}>{data.title}</a></h2>
+
+    <p class="dek">{data.description}</p>
+
+    <p class="byline">
+      <Avatar initials={initials} size={34} />
+      <span>{profile.name}</span>
+    </p>
+
+    <p class="cta">
+      <span>Read the story</span>
+      <Icon name="arrow-right" size={15} />
+    </p>
+  </div>
+</article>
+
+<style>
+  .feature {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--space-7);
+    align-items: center;
+  }
+
+  .cover {
+    display: block;
+  }
+
+  .copy {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  .kicker {
+    color: var(--accent);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .cat {
+    color: var(--muted);
+  }
+
+  .sep {
+    color: var(--border-strong);
+  }
+
+  h2 {
+    font-size: clamp(26px, 2.9vw, 40px);
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+  }
+
+  h2 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  /* One hit target over the whole feature, same pattern as BlogCard. */
+  h2 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .feature:hover h2 a {
+    color: var(--accent-strong);
+  }
+
+  .dek {
+    max-width: 56ch;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .byline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--accent);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .cta :global(svg) {
+    transition: transform var(--dur-ui) var(--ease);
+  }
+
+  .feature:hover .cta :global(svg) {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 900px) {
+    .feature {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+  }
+</style>

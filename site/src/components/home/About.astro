@@ -1,0 +1,116 @@
+---
+import Section from './Section.astro';
+import SectionHeading from './SectionHeading.astro';
+import { about } from '../../data/about';
+import { headings } from '../../data/sections';
+import { stats } from '../../data/stats';
+---
+
+<Section id="about" band="surface">
+  <SectionHeading heading={headings.about} />
+
+  <div class="about-grid">
+    <div class="about-copy">
+      {about.paragraphs.map((p) => <p>{p}</p>)}
+      <blockquote class="pull">{about.pullQuote}</blockquote>
+    </div>
+
+    <div class="stat-panel card">
+      <dl>
+        {
+          stats.map((s) => (
+            <div class="stat">
+              <dt>{s.label}</dt>
+              <dd>
+                <span class="value">{s.value}</span>
+                {s.note && <span class="note">{s.note}</span>}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+</Section>
+
+<style>
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .about-copy {
+    display: grid;
+    gap: var(--space-5);
+    color: var(--muted);
+    max-width: 66ch;
+  }
+
+  .pull {
+    margin: var(--space-2) 0 0;
+    padding-inline-start: var(--space-5);
+    border-inline-start: 2px solid var(--accent);
+    color: var(--text);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.5;
+  }
+
+  /* One panel rather than four separate stat cards. Four cards each holding a
+     two-word label is a lot of border for very little content, and the figures
+     read as a set when they share a surface. */
+  .stat-panel dl {
+    display: grid;
+    gap: 0;
+    margin: 0;
+  }
+
+  .stat {
+    display: grid;
+    gap: 2px;
+    padding-block: var(--space-4);
+  }
+
+  .stat + .stat {
+    border-top: 1px solid var(--border);
+  }
+
+  .stat dt {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .stat dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  .value {
+    color: var(--accent-strong);
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+  }
+
+  /* The derivation, rendered rather than hidden in a comment. Every figure on
+     this site can be traced, and showing the trace is the point. */
+  .note {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .about-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-6);
+    }
+  }
+</style>
