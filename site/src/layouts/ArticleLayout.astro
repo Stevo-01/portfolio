@@ -1,7 +1,6 @@
 ---
-// STUB: owned by slice 01 (layout-chrome).
 import type { MarkdownHeading } from 'astro';
-import BaseLayout from './BaseLayout.astro';
+import JournalLayout from './JournalLayout.astro';
 
 interface Props {
   title: string;
@@ -12,12 +11,61 @@ interface Props {
   headings: MarkdownHeading[];
 }
 
+// `headings` is destructured out rather than spread onward: JournalLayout does
+// not accept it, and passing it through would land it on the DOM as an
+// attribute. Slice 05 owns the TOC component; slice 01 owns only the grid it
+// sits in, which is why the rail is a named slot rather than a component here.
 const { headings, ...rest } = Astro.props;
 ---
 
-<BaseLayout {...rest}>
-  <main id="main">
-    <slot />
-    <!-- headings: {headings.length} — slice 05 renders the TOC from these -->
-  </main>
-</BaseLayout>
+<JournalLayout {...rest}>
+  <slot name="head" slot="head" />
+
+  <div class="article-shell">
+    <aside class="article-rail" data-headings={headings.length}>
+      <slot name="toc" />
+    </aside>
+
+    <div class="article-body">
+      <slot />
+    </div>
+  </div>
+</JournalLayout>
+
+<style>
+  .article-shell {
+    display: grid;
+    /* Rail first in the source so it is reachable before the prose by keyboard
+       and by screen reader, which is the order a reader navigating by landmark
+       expects. */
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--space-8);
+    width: var(--container);
+    margin-inline: auto;
+    padding-block: var(--space-8);
+  }
+
+  .article-rail > :global(*) {
+    position: sticky;
+    /* Clears the fixed header, plus breathing room. Without the --header-h term
+       the first sticky heading hides behind the glass. */
+    top: calc(var(--header-h) + 32px);
+    max-height: calc(100dvh - var(--header-h) - 64px);
+    overflow-y: auto;
+  }
+
+  /* The article breakpoint is 1000px, not the site-wide 900px: the TOC needs
+     its 220px rail plus a readable measure, and that runs out sooner than the
+     grids elsewhere do. */
+  @media (max-width: 1000px) {
+    .article-shell {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-6);
+    }
+
+    .article-rail > :global(*) {
+      position: static;
+      max-height: none;
+    }
+  }
+</style>

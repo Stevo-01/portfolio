@@ -1,18 +1,354 @@
 ---
-// STUB: owned by slice 01 (layout-chrome).
+import Icon from '../ui/Icon.astro';
+import Logo from '../ui/Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { CONTACT_LINK, NAV_ITEMS, type NavKey } from './nav';
+
 interface Props {
-  active?:
-    | 'about'
-    | 'experience'
-    | 'projects'
-    | 'skills'
-    | 'education'
-    | 'blog';
+  active?: NavKey;
 }
 
 const { active } = Astro.props;
 ---
 
-<header data-stub="header" data-active={active}>
-  <!-- STUB: glass header, nav, mobile dialog and theme toggle land in slice 01 -->
+{/*
+  Scroll sentinel. The header border fades in once the page has scrolled past
+  it. Absolutely positioned so it costs no layout, and observed rather than
+  polled: a `scroll` listener fires on every frame of every scroll on the
+  most-seen element of the site, and an IntersectionObserver fires twice.
+*/}
+<div data-scroll-sentinel aria-hidden="true"></div>
+
+<header class="site-header" data-site-header>
+  <div class="header-inner">
+    <a href="/" class="header-logo" aria-label="Stephen Adedigba, home">
+      <Logo />
+    </a>
+
+    <nav class="header-nav" aria-label="Primary">
+      <ul>
+        {
+          NAV_ITEMS.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="nav-link"
+                aria-current={active === item.key ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <a href={CONTACT_LINK.href} class="contact-pill">
+        <Icon name={CONTACT_LINK.icon} size={15} />
+        <span>{CONTACT_LINK.label}</span>
+      </a>
+
+      <ThemeToggle />
+
+      <button
+        type="button"
+        class="menu-button"
+        data-menu-open
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+      >
+        <Icon name="menu" size={20} />
+      </button>
+    </div>
+  </div>
 </header>
+
+{/*
+  Native <dialog> rather than a hand-rolled panel. showModal() gives focus
+  containment, Escape-to-close, inertness of the page behind, and focus restored
+  to the invoker, all from the platform. Reimplementing those in script is where
+  mobile menus usually go wrong, and it would cost far more than the budget.
+*/}
+<dialog id="mobile-nav" class="mobile-nav" data-mobile-nav aria-label="Menu">
+  <div class="mobile-nav-inner">
+    <div class="mobile-nav-head">
+      <Logo />
+      <button type="button" class="menu-button" data-menu-close aria-label="Close menu">
+        <Icon name="x" size={20} />
+      </button>
+    </div>
+
+    <nav aria-label="Primary, mobile">
+      <ul>
+        {
+          NAV_ITEMS.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={active === item.key ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <a href={CONTACT_LINK.href} class="contact-pill mobile-contact">
+      <Icon name={CONTACT_LINK.icon} size={16} />
+      <span>{CONTACT_LINK.label}</span>
+    </a>
+  </div>
+</dialog>
+
+<style>
+  /* --- sentinel ----------------------------------------------------------
+     24px down the document. Once it leaves the viewport the page has scrolled
+     far enough for the header to want a border. */
+  [data-scroll-sentinel] {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  /* --- header ------------------------------------------------------------- */
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    height: var(--header-h);
+    background: var(--header-bg);
+    /* The saturate is doing as much work as the blur. Without it the warm
+       surfaces behind the header go grey and the glass reads as fog. */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-slow) var(--ease);
+  }
+
+  .site-header[data-scrolled] {
+    border-bottom-color: var(--border);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    width: var(--container-wide);
+    height: 100%;
+    margin-inline: auto;
+  }
+
+  .header-logo {
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  /* --- nav ---------------------------------------------------------------- */
+  .header-nav {
+    margin-inline-start: auto;
+  }
+
+  .header-nav ul,
+  .mobile-nav nav ul {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    color: var(--muted);
+    font-size: 14.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--dur-ui) var(--ease);
+  }
+
+  /* --accent-strong, not --accent. At 14.5px the brighter peach holds its
+     colour against the espresso; the base accent muddies. */
+  .nav-link:hover,
+  .nav-link[aria-current='page'] {
+    color: var(--accent-strong);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-inline-start: var(--space-2);
+  }
+
+  .contact-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      border-color var(--dur-ui) var(--ease),
+      box-shadow var(--dur-ui) var(--ease);
+  }
+
+  .contact-pill:hover {
+    border-color: var(--accent);
+    box-shadow: var(--glow-card-hover);
+  }
+
+  .menu-button {
+    display: none;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-button);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* --- mobile dialog ------------------------------------------------------ */
+  .mobile-nav {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .mobile-nav::backdrop {
+    background: var(--bg);
+  }
+
+  .mobile-nav-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    width: var(--container);
+    margin-inline: auto;
+    padding-block: var(--space-4) var(--space-8);
+  }
+
+  .mobile-nav-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-h);
+  }
+
+  .mobile-nav-head .menu-button {
+    display: grid;
+  }
+
+  .mobile-nav nav ul {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .mobile-nav nav li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .mobile-nav nav a {
+    display: block;
+    padding-block: var(--space-5);
+    color: var(--text);
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    text-decoration: none;
+  }
+
+  .mobile-nav nav a[aria-current='page'] {
+    color: var(--accent-strong);
+  }
+
+  .mobile-contact {
+    align-self: flex-start;
+    padding: var(--space-3) var(--space-5);
+    font-size: 15px;
+  }
+
+  /* --- breakpoint --------------------------------------------------------- */
+  @media (max-width: 900px) {
+    .header-nav,
+    .header-actions .contact-pill {
+      display: none;
+    }
+
+    .header-actions {
+      margin-inline-start: auto;
+    }
+
+    .menu-button {
+      display: grid;
+    }
+  }
+</style>
+
+<script>
+  /* --- header border on scroll ------------------------------------------- */
+  const sentinel = document.querySelector('[data-scroll-sentinel]');
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+
+  if (sentinel && header) {
+    new IntersectionObserver(([entry]) => {
+      header.toggleAttribute('data-scrolled', !entry.isIntersecting);
+    }).observe(sentinel);
+  }
+
+  /* --- mobile menu -------------------------------------------------------- */
+  const dialog = document.querySelector<HTMLDialogElement>('[data-mobile-nav]');
+  const openButton = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+
+  if (dialog && openButton) {
+    const setExpanded = (open: boolean) =>
+      openButton.setAttribute('aria-expanded', String(open));
+
+    openButton.addEventListener('click', () => {
+      dialog.showModal();
+      setExpanded(true);
+    });
+
+    document
+      .querySelector<HTMLButtonElement>('[data-menu-close]')
+      ?.addEventListener('click', () => dialog.close());
+
+    // Fires for the close button, for Escape, and for a backdrop click alike,
+    // so aria-expanded cannot drift out of sync with the dialog's real state.
+    dialog.addEventListener('close', () => setExpanded(false));
+
+    // Backdrop click. The dialog element fills the viewport, so a click landing
+    // on the dialog itself rather than on its inner wrapper is a click outside
+    // the content.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    // Following a link inside the panel navigates but does not unmount the
+    // dialog on a same-page anchor, so it would stay open over the target.
+    dialog.querySelectorAll('a').forEach((link) =>
+      link.addEventListener('click', () => dialog.close()),
+    );
+  }
+</script>

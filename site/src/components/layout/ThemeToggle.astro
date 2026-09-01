@@ -1,5 +1,107 @@
 ---
-// STUB: owned by slice 01 (layout-chrome). No props.
+import Icon from '../ui/Icon.astro';
 ---
 
-<button type="button" data-stub="theme-toggle" aria-label="Switch theme"></button>
+{/*
+  The one interactive control in the header. No props: the current theme is
+  read from the DOM, not passed in, because the page is static HTML and the
+  server has no idea which theme this visitor chose.
+
+  The aria-label describes the ACTION, not the state. "Dark theme" would leave
+  a screen reader user guessing whether pressing it turns dark on or off.
+*/}
+<button
+  type="button"
+  class="theme-toggle"
+  data-theme-toggle
+  aria-label="Switch to light theme"
+>
+  <Icon name="sun" size={18} class="icon-sun" />
+  <Icon name="moon" size={18} class="icon-moon" />
+</button>
+
+<style>
+  .theme-toggle {
+    display: grid;
+    place-items: center;
+    /* Fixed box. Both icons occupy the same grid cell and one is hidden, so
+       the control cannot resize when the theme changes. */
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-button);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      color var(--dur-ui) var(--ease),
+      border-color var(--dur-ui) var(--ease),
+      background-color var(--dur-ui) var(--ease);
+  }
+
+  .theme-toggle:hover {
+    color: var(--accent-strong);
+    border-color: var(--border-strong);
+    background: var(--surface-raised);
+  }
+
+  .theme-toggle :global(svg) {
+    grid-area: 1 / 1;
+  }
+
+  /*
+    Exactly one icon renders per theme, decided in CSS rather than JavaScript.
+    That matters for the first paint: the theme-init script has already set
+    data-theme before any of this parses, so the correct icon is there from the
+    first frame and the button never flickers or shifts.
+
+    Dark is the default, so the default state shows the moon and offers the sun.
+  */
+  /*
+    :global is required, not stylistic. The class lands on an <svg> rendered
+    inside Icon.astro, so that element carries Icon's scope hash and not this
+    component's. A plainly-scoped `.icon-sun` compiles to
+    `.icon-sun[data-astro-cid-<ThemeToggle>]`, matches nothing, and both icons
+    render on top of each other with no error anywhere to say so.
+  */
+  .theme-toggle :global(.icon-sun) {
+    display: none;
+  }
+
+  :global(:root[data-theme='light']) .theme-toggle :global(.icon-sun) {
+    display: block;
+  }
+
+  :global(:root[data-theme='light']) .theme-toggle :global(.icon-moon) {
+    display: none;
+  }
+</style>
+
+<script>
+  import { applyTheme, currentTheme } from '../../lib/theme';
+
+  /*
+    One listener for the whole page. There is only ever one toggle rendered, but
+    querying and binding defensively costs nothing and avoids a null deref if a
+    layout ever renders the header twice.
+  */
+  function label(next: 'dark' | 'light'): string {
+    return `Switch to ${next} theme`;
+  }
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    '[data-theme-toggle]',
+  )) {
+    // Correct the label on load. The server rendered "Switch to light theme"
+    // because dark is the default, but this visitor may have chosen light on a
+    // previous visit, in which case the button now offers dark.
+    button.setAttribute('aria-label', label(currentTheme() === 'dark' ? 'light' : 'dark'));
+
+    button.addEventListener('click', () => {
+      const next = currentTheme() === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      button.setAttribute('aria-label', label(next === 'dark' ? 'light' : 'dark'));
+    });
+  }
+</script>
