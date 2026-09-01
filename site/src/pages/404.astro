@@ -1,0 +1,221 @@
+---
+import Button from '../components/ui/Button.astro';
+import Container from '../components/ui/Container.astro';
+import Logo from '../components/ui/Logo.astro';
+import Seo from '../components/seo/Seo.astro';
+import ThemeToggle from '../components/layout/ThemeToggle.astro';
+import { THEME_INIT_SCRIPT } from '../lib';
+import { absoluteUrl } from '../components/seo/meta';
+import '../styles/global.css';
+
+const title = 'Page not found | Stephen Adedigba';
+const description = 'That route does not exist. Here are some that do.';
+const canonical = absoluteUrl('/404', Astro.site);
+
+// Deliberately not the site nav: the visitor already failed to find something,
+// so this is a short list of destinations rather than the full menu.
+const paths = [
+  { label: 'About', href: '/#about' },
+  { label: 'Experience', href: '/#experience' },
+  { label: 'Skills', href: '/#skills' },
+  { label: 'Journal', href: '/blog/' },
+  { label: 'Contact', href: '/#contact' },
+];
+---
+
+{/*
+  Chromeless: no Header, no footer, its own <html>. A 404 that renders the full
+  site furniture invites the visitor to keep browsing from a broken state; this
+  one is a signpost.
+
+  ── NO AUTO-REDIRECT ──────────────────────────────────────────────────────
+  The reference design bounces to the homepage after twelve seconds. That is
+  not shipped here and the omission is deliberate. Moving a visitor's page out
+  from under them fails WCAG 2.2.1 (Timing Adjustable) and 2.2.2 (Pause, Stop,
+  Hide): a screen-reader user part way through the copy, or anyone reading at
+  their own pace, loses the page mid-sentence with no way to stop it. The
+  helpful-paths row does the same job and leaves the visitor in control.
+*/}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline set:html={THEME_INIT_SCRIPT} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <title>{title}</title>
+    <Seo title={title} description={description} canonical={canonical} noindex />
+  </head>
+
+  <body>
+    <main class="page" id="main">
+      <div class="grid-bg" aria-hidden="true"></div>
+
+      <div class="toggle"><ThemeToggle /></div>
+
+      <Container class="inner">
+        <a class="brand" href="/" aria-label="Stephen Adedigba, home"><Logo /></a>
+
+        <p class="lockup" aria-hidden="true">
+          <span>4</span>
+          <span class="mark"><Logo markOnly /></span>
+          <span>4</span>
+        </p>
+
+        <p class="kicker">Route not found</p>
+        <h1>This page does not exist</h1>
+        <p class="copy">
+          The link may be out of date, or the address may have a typo in it.
+          Nothing here is lost, it is just not at this address.
+        </p>
+
+        <div class="ctas">
+          <Button variant="primary" href="/" icon="arrow-right">Return home</Button>
+          <Button variant="secondary" href="/blog/" icon="book-open">Read the journal</Button>
+        </div>
+
+        <nav class="paths" aria-label="Helpful links">
+          <p class="paths-label">Try one of these</p>
+          <ul>
+            {paths.map((p) => <li><a href={p.href}>{p.label}</a></li>)}
+          </ul>
+        </nav>
+      </Container>
+    </main>
+  </body>
+</html>
+
+<style>
+  .page {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-block: var(--space-8);
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, var(--glow-peach), transparent 70%),
+      linear-gradient(180deg, var(--hero-bg), var(--bg));
+    overflow: hidden;
+    text-align: center;
+  }
+
+  /* A static grid rather than slice 02's BackgroundField: the 404 has no
+     animation budget worth spending and no need for a rAF loop on a page whose
+     whole job is to point somewhere else. */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(to right, var(--grid-line) 0 1px, transparent 1px 52px),
+      repeating-linear-gradient(to bottom, var(--grid-line) 0 1px, transparent 1px 52px);
+    -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black, transparent 75%);
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black, transparent 75%);
+  }
+
+  .toggle {
+    position: absolute;
+    top: var(--space-5);
+    right: var(--space-5);
+    z-index: 2;
+  }
+
+  .page :global(.inner) {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-4);
+  }
+
+  .brand {
+    text-decoration: none;
+  }
+
+  .lockup {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    font-size: clamp(76px, 13vw, 150px);
+    font-weight: 700;
+    letter-spacing: -0.06em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .mark {
+    display: grid;
+    place-items: center;
+    width: clamp(58px, 10vw, 112px);
+  }
+
+  .mark :global(.logo-mark) {
+    width: 100%;
+    height: auto;
+  }
+
+  .kicker {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(26px, 3.4vw, 40px);
+    letter-spacing: -0.035em;
+  }
+
+  .copy {
+    max-width: 48ch;
+    color: var(--muted);
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+
+  .paths {
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+    width: min(100%, 620px);
+  }
+
+  .paths-label {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .paths ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3) var(--space-5);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .paths a {
+    color: var(--muted);
+    font-size: 14.5px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .paths a:hover {
+    color: var(--accent-strong);
+  }
+</style>

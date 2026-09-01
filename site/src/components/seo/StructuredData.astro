@@ -1,0 +1,99 @@
+---
+import { absoluteUrl } from './meta';
+import { profile } from '../../data/profile';
+import type { Post } from '../../types/content';
+
+interface Crumb {
+  name: string;
+  path: string;
+}
+
+interface Props {
+  /** `person` on the homepage; `article` on a post. */
+  kind: 'person' | 'article';
+  post?: Post;
+  /** Rendered as a BreadcrumbList when supplied. */
+  crumbs?: Crumb[];
+  ogImage?: string;
+}
+
+const { kind, post, crumbs, ogImage } = Astro.props;
+
+const site = Astro.site;
+const abs = (p: string) => absoluteUrl(p, site);
+
+/**
+ * Structured data. Owned by slice 06.
+ *
+ * ⚠️ THIS MUST ACTUALLY BE RENDERED. The reference implementation authored its
+ * JSON-LD and then never referenced the component, and the gap survived to
+ * production because nothing fails when structured data is missing: the page
+ * looks identical. The check is one line, and it belongs in the slice gate:
+ *
+ *   grep -c 'application/ld+json' dist/index.html
+ */
+
+// Only socials with a real URL. `sameAs` is a claim that these profiles are the
+// same person, and an empty string there is a broken claim, not a blank one.
+const sameAs = profile.socials
+  .filter((s) => s.href && !s.href.startsWith('mailto:'))
+  .map((s) => s.href);
+
+const person = {
+  '@type': 'Person',
+  '@id': abs('/#person'),
+  name: profile.name,
+  jobTitle: profile.role,
+  description: profile.tagline,
+  url: abs('/'),
+  email: `mailto:${profile.email}`,
+  ...(sameAs.length > 0 ? { sameAs } : {}),
+};
+
+const graph: Record<string, unknown>[] = [];
+
+if (kind === 'person') {
+  graph.push({ '@context': 'https://schema.org', ...person });
+}
+
+if (kind === 'article' && post) {
+  graph.push({
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.data.title,
+    description: post.data.description,
+    datePublished: post.data.publishDate.toISOString(),
+    // Falls back to publishDate: omitting dateModified entirely is fine, but a
+    // null one is a validation error.
+    dateModified: (post.data.updatedDate ?? post.data.publishDate).toISOString(),
+    author: person,
+    publisher: person,
+    image: abs(ogImage ?? '/og-default.png'),
+    mainEntityOfPage: { '@type': 'WebPage', '@id': abs(`/blog/${post.id}/`) },
+    keywords: post.data.tags.join(', '),
+  });
+}
+
+if (crumbs && crumbs.length > 0) {
+  graph.push({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: abs(c.path),
+    })),
+  });
+}
+---
+
+{/* is:inline is explicit rather than inferred. JSON-LD must reach the page
+    verbatim: bundling or transforming it would break the contract crawlers
+    read. Astro infers this anyway and warns about it; saying so removes the
+    warning and records the intent. */}
+{
+  graph.map((node) => (
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(node)} />
+  ))
+}
