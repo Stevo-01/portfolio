@@ -1,0 +1,112 @@
+---
+import JournalLayout from '../../layouts/JournalLayout.astro';
+import Container from '../../components/ui/Container.astro';
+
+import CardGrid from '../../components/journal/CardGrid.astro';
+import CategoryTabs from '../../components/journal/CategoryTabs.astro';
+import EmptyState from '../../components/journal/EmptyState.astro';
+import FeatureStory from '../../components/journal/FeatureStory.astro';
+import Masthead from '../../components/journal/Masthead.astro';
+import RowGrid from '../../components/journal/RowGrid.astro';
+import SectionRail from '../../components/journal/SectionRail.astro';
+
+import { getCategoryCounts, getPublishedPosts, getSeriesParts } from '../../lib';
+import { getOrderedCategories } from '../../components/journal/taxonomy';
+import type { Row } from '../../components/journal/taxonomy';
+import { getCollection } from 'astro:content';
+
+// Always through the lib helpers: getPublishedPosts() is the only place the
+// draft filter lives.
+const posts = await getPublishedPosts();
+const [feature, ...rest] = posts;
+
+const counts = await getCategoryCounts();
+const categories = await getOrderedCategories();
+
+const seriesEntries = await getCollection('series');
+const seriesRows: Row[] = await Promise.all(
+  seriesEntries.map(async (s) => {
+    const parts = await getSeriesParts(s.data.slug);
+    return {
+      href: `/blog/series/${s.data.slug}/`,
+      title: s.data.title,
+      description: s.data.description,
+      // A series with nothing filed yet says so rather than showing "0 parts",
+      // which reads like a counting bug.
+      meta: parts.length === 0 ? 'in progress' : `${parts.length} parts`,
+    };
+  }),
+);
+
+const disciplineRows: Row[] = categories.map((c) => ({
+  href: `/blog/category/${c.data.slug}/`,
+  title: c.data.title,
+  description: c.data.description,
+  meta: counts[c.data.slug] === 1 ? '1 article' : `${counts[c.data.slug]} articles`,
+}));
+---
+
+<JournalLayout
+  title="The Engineering Journal | Stephen Adedigba"
+  description="Notes on retrieval-augmented generation, language models, MLOps and getting a model out of a notebook and in front of somebody."
+>
+  <Masthead count={posts.length} />
+  <CategoryTabs active="latest" />
+
+  {
+    feature ? (
+      <>
+        <section class="band">
+          <Container>
+            <FeatureStory post={feature} />
+          </Container>
+        </section>
+
+        {rest.length > 0 && (
+          <section class="band band-surface">
+            <Container>
+              <SectionRail
+                title="Latest writing"
+                lead="Everything else published, newest first."
+              />
+              <CardGrid posts={rest} />
+            </Container>
+          </section>
+        )}
+      </>
+    ) : (
+      <section class="band">
+        <Container>
+          <EmptyState
+            title="Nothing published yet"
+            body="The first articles are being written. Check back shortly."
+          />
+        </Container>
+      </section>
+    )
+  }
+
+  <section class="band">
+    <Container>
+      <SectionRail title="Reading series" lead="Multi-part paths through one subject." />
+      <RowGrid rows={seriesRows} />
+    </Container>
+  </section>
+
+  <section class="band band-surface">
+    <Container>
+      <SectionRail title="Disciplines" lead="Five subjects, and what each one covers." />
+      <RowGrid rows={disciplineRows} />
+    </Container>
+  </section>
+</JournalLayout>
+
+<style>
+  .band {
+    padding-block: var(--space-8);
+  }
+
+  .band-surface {
+    background: var(--surface);
+  }
+</style>

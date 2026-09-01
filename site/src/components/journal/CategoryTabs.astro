@@ -1,5 +1,7 @@
 ---
-// STUB: owned by slice 04 (journal-taxonomy).
+import Container from '../ui/Container.astro';
+import { getOrderedCategories } from './taxonomy';
+import { getCategoryCounts } from '../../lib';
 import type { CategorySlug } from '../../types/content';
 
 interface Props {
@@ -7,8 +9,89 @@ interface Props {
 }
 
 const { active = 'latest' } = Astro.props;
+
+const categories = await getOrderedCategories();
+const counts = await getCategoryCounts();
 ---
 
-<nav data-stub="category-tabs" data-active={active} aria-label="Disciplines">
-  <!-- STUB -->
+<nav class="tabs" aria-label="Disciplines">
+  <Container>
+    <ul>
+      <li>
+        <a href="/blog/" aria-current={active === 'latest' ? 'page' : undefined}>
+          Latest
+        </a>
+      </li>
+      {
+        categories.map((cat) => (
+          <li>
+            <a
+              href={`/blog/category/${cat.data.slug}/`}
+              aria-current={active === cat.data.slug ? 'page' : undefined}
+            >
+              {cat.data.title}
+              {/* Zero is shown, not hidden. An empty discipline is a fact about
+                  the journal, and hiding the count would make the tab look
+                  like every other one until you click it. */}
+              <span class="count">{counts[cat.data.slug]}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Container>
 </nav>
+
+<style>
+  .tabs {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  ul {
+    display: flex;
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* Scrolls horizontally on narrow screens rather than wrapping into a
+       two-row block that shifts the page below it. */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  ul::-webkit-scrollbar {
+    display: none;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-block: var(--space-4);
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-size: 14.5px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      color var(--dur-ui) var(--ease),
+      border-color var(--dur-ui) var(--ease);
+  }
+
+  a:hover {
+    color: var(--accent-strong);
+  }
+
+  a[aria-current='page'] {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+
+  .count {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+</style>

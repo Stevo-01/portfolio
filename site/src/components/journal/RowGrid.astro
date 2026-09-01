@@ -1,0 +1,146 @@
+---
+import Icon from '../ui/Icon.astro';
+import { railNumber } from '../../lib';
+import type { Row } from './taxonomy';
+
+interface Props {
+  rows: Row[];
+}
+
+const { rows } = Astro.props;
+---
+
+{/*
+  Shared by the series shelf and the discipline grid. Two columns of numbered
+  rows rather than cards: a shelf of eight cards would out-shout the article
+  grid above it, and these are navigation, not content.
+*/}
+<ol class="rows" data-odd={rows.length % 2 === 1 ? '' : undefined}>
+  {
+    rows.map((row, i) => (
+      <li>
+        <a href={row.href}>
+          <span class="num">{railNumber(i + 1)}</span>
+          <span class="text">
+            <span class="title">{row.title}</span>
+            <span class="desc">{row.description}</span>
+          </span>
+          <span class="meta">
+            <span>{row.meta}</span>
+            <Icon name="arrow-right" size={14} />
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .rows {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  li {
+    border-block-end: 1px solid var(--border);
+  }
+
+  /* Right column gets a left border, so the two columns read as a grid rather
+     than two stacked lists. */
+  li:nth-child(even) {
+    border-inline-start: 1px solid var(--border);
+  }
+
+  /* The last row in each column drops its bottom border. With an odd count the
+     final row sits alone in the left column, and without this it keeps a
+     border under it and an empty bordered cell beside it. */
+  li:last-child,
+  .rows:not([data-odd]) li:nth-last-child(2) {
+    border-block-end: 0;
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--space-4);
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color var(--dur-ui) var(--ease);
+  }
+
+  a:hover {
+    background: var(--surface);
+  }
+
+  .num {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .title {
+    color: var(--text);
+    font-size: 15.5px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  .desc {
+    color: var(--muted);
+    font-size: 13.5px;
+    /* One line. These are index entries; a wrapping description turns the
+       shelf into a wall. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .meta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  a:hover .meta {
+    color: var(--accent);
+  }
+
+  @media (max-width: 900px) {
+    .rows {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    li:nth-child(even) {
+      border-inline-start: 0;
+    }
+
+    /* Single column: only the true last row loses its border. */
+    .rows:not([data-odd]) li:nth-last-child(2) {
+      border-block-end: 1px solid var(--border);
+    }
+
+    li:last-child {
+      border-block-end: 0;
+    }
+  }
+</style>

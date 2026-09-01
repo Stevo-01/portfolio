@@ -1,0 +1,65 @@
+---
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  title: string;
+  body: string;
+}
+
+const { title, body } = Astro.props;
+---
+
+{/*
+  Three of the five disciplines have no posts yet, so this is a real state the
+  site spends most of its early life in, not an edge case. A bare heading over
+  blank space reads as a broken page; saying plainly that nothing is filed here
+  yet, and offering a way onward, does not.
+*/}
+<div class="empty">
+  <span class="badge" aria-hidden="true"><Icon name="book-open" size={20} /></span>
+  <p class="title">{title}</p>
+  <p class="body">{body}</p>
+  <a href="/blog/">Browse everything published so far</a>
+</div>
+
+<style>
+  .empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    padding: var(--space-8) var(--space-5);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    text-align: center;
+  }
+
+  .badge {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .title {
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 650;
+  }
+
+  .body {
+    max-width: 48ch;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  a {
+    margin-top: var(--space-2);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+  }
+</style>
