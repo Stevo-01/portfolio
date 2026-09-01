@@ -1,0 +1,33 @@
+---
+interface Props {
+  initials: string;
+  size?: number;
+  class?: string;
+}
+
+const { initials, size = 44, class: className } = Astro.props;
+---
+
+<span
+  class:list={['avatar', className]}
+  style={`--avatar-size:${size}px`}
+  aria-hidden="true"
+>{initials}</span>
+
+<style>
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--on-accent);
+    font-size: calc(var(--avatar-size) * 0.36);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    /* Decorative and aria-hidden: the name always appears as real text
+       beside it, so announcing "BJ" would just add noise. */
+    user-select: none;
+  }
+</style>

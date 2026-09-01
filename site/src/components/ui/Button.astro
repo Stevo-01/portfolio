@@ -1,0 +1,123 @@
+---
+import Icon from './Icon.astro';
+import type { IconName } from './icon-paths';
+
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  href?: string;
+  type?: 'button' | 'submit';
+  icon?: IconName;
+  /** Icon after the label rather than before. Default for `arrow-right`. */
+  iconTrailing?: boolean;
+  class?: string;
+  /** Renders as a non-interactive element. Used for absent social links. */
+  disabled?: boolean;
+}
+
+const {
+  variant = 'secondary',
+  href,
+  type = 'button',
+  icon,
+  iconTrailing,
+  class: className,
+  disabled,
+} = Astro.props;
+
+// An <a> without href is not focusable and not a link; a disabled control has
+// to be a real <button disabled>. This is why the contact section can render an
+// unknown social URL honestly instead of as a dead link.
+const Tag = href && !disabled ? 'a' : 'button';
+
+const trailing = iconTrailing ?? icon === 'arrow-right';
+---
+
+<Tag
+  class:list={['btn', `btn-${variant}`, className]}
+  href={Tag === 'a' ? href : undefined}
+  type={Tag === 'button' ? type : undefined}
+  disabled={Tag === 'button' && disabled ? true : undefined}
+  aria-disabled={disabled ? 'true' : undefined}
+>
+  {icon && !trailing && <Icon name={icon} size={18} />}
+  <span><slot /></span>
+  {icon && trailing && <Icon name={icon} size={18} class="btn-trail" />}
+</Tag>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border: 1px solid transparent;
+    border-radius: var(--radius-button);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform var(--dur-ui) var(--ease),
+      box-shadow var(--dur-ui) var(--ease),
+      border-color var(--dur-ui) var(--ease),
+      background-color var(--dur-ui) var(--ease),
+      color var(--dur-ui) var(--ease);
+  }
+
+  .btn[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn:not([aria-disabled='true']):hover {
+    transform: translateY(-2px);
+  }
+
+  /* --- primary: the gradient CTA ---------------------------------------- */
+  .btn-primary {
+    background: linear-gradient(92deg, var(--accent), var(--accent-2));
+    /* NOT white. White on the peach fill measures 2.26:1 and fails AA; this
+       token is dark espresso in the default theme and white in light, where
+       the accent darkens. See tokens.css. */
+    color: var(--on-accent);
+    box-shadow: var(--glow-cta);
+  }
+
+  .btn-primary:not([aria-disabled='true']):hover {
+    box-shadow: var(--glow-cta-hover);
+  }
+
+  /* --- secondary: bordered glass ---------------------------------------- */
+  .btn-secondary {
+    background: var(--header-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .btn-secondary:not([aria-disabled='true']):hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--glow-card-hover);
+  }
+
+  /* --- ghost ------------------------------------------------------------- */
+  .btn-ghost {
+    padding-inline: var(--space-2);
+    background: none;
+    color: var(--muted);
+  }
+
+  .btn-ghost:not([aria-disabled='true']):hover {
+    color: var(--accent);
+  }
+
+  /* Trailing arrows lead the eye on hover. */
+  .btn-trail {
+    transition: transform var(--dur-ui) var(--ease);
+  }
+
+  .btn:not([aria-disabled='true']):hover .btn-trail {
+    transform: translateX(3px);
+  }
+</style>

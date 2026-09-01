@@ -1,0 +1,7 @@
+# PLACEHOLDER shape only — slice 07 owns the real copy.
+# A post joins by setting BOTH `series: rag-in-practice` and a numeric `part:`.
+# The Zod refinement in content.config.ts rejects one without the other.
+slug: rag-in-practice
+title: "RAG in practice"
+description: "What retrieval-augmented generation actually buys you, and where it stops helping."
+category: llms-and-rag

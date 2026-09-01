@@ -1,0 +1,7 @@
+# PLACEHOLDER shape only — slice 07 owns the real copy.
+# Feeds /blog/category/mlops/, the CategoryTabs strip and the discipline grid.
+# Article counts are derived at build time, never stored here.
+slug: mlops
+title: "MLOps"
+description: "Getting a model out of a notebook and keeping it running: packaging, pipelines, tracking, and deployment."
+order: 3

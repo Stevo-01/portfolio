@@ -1,0 +1,15 @@
+---
+// STUB: owned by slice 02 (animated-background).
+import type { IconName } from '../../types/icons';
+
+interface Props {
+  density?: 'full' | 'subtle';
+  icons?: IconName[];
+}
+
+const { density = 'full', icons = [] } = Astro.props;
+---
+
+<div data-stub="background" data-density={density} data-icons={icons.length} aria-hidden="true">
+  <!-- STUB: aurora, masked grid, drift icons and noise land in slice 02 -->
+</div>

@@ -1,0 +1,21 @@
+---
+// STUB: owned by slice 04 (journal-taxonomy).
+import type { CategorySlug } from '../../types/content';
+import type { IconName } from '../../types/icons';
+
+interface Props {
+  category: CategorySlug;
+  variant: 'lead' | 'card' | 'banner';
+  glyph?: IconName;
+}
+
+const { category, variant, glyph } = Astro.props;
+---
+
+<div
+  data-stub="cover-art"
+  data-category={category}
+  data-variant={variant}
+  data-glyph={glyph}
+  aria-hidden="true"
+></div>

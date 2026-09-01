@@ -1,0 +1,21 @@
+---
+// STUB: owned by slice 06 (seo-404-feeds).
+interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  ogImage?: string;
+  noindex?: boolean;
+  type?: 'website' | 'article';
+}
+
+const { title, description, canonical, ogImage, noindex, type = 'website' } = Astro.props;
+---
+
+<link rel="canonical" href={canonical} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={type} />
+{ogImage && <meta property="og:image" content={ogImage} />}
+{noindex && <meta name="robots" content="noindex" />}
+<!-- STUB: JSON-LD, twitter card and the full head set land in slice 06 -->

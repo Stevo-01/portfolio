@@ -1,0 +1,14 @@
+---
+// STUB: owned by slice 04 (journal-taxonomy).
+import type { CategorySlug } from '../../types/content';
+
+interface Props {
+  active?: CategorySlug | 'latest';
+}
+
+const { active = 'latest' } = Astro.props;
+---
+
+<nav data-stub="category-tabs" data-active={active} aria-label="Disciplines">
+  <!-- STUB -->
+</nav>
