@@ -18,8 +18,12 @@ domain_name = "naijora.com"
 # request and no new validation records.
 subdomain = "stephen"
 
-github_owner = "Stevo-01"
-github_repo  = "portfolio"
+# Numeric ids, not names — GitHub embeds these in the OIDC subject and they
+# survive a rename or a delete-and-recreate. gh api repos/Stevo-01/portfolio
+github_owner    = "Stevo-01"
+github_repo     = "portfolio"
+github_owner_id = "65500009"
+github_repo_id  = "1353605628"
 
 price_class = "PriceClass_100"
 

@@ -60,9 +60,11 @@ module "ci" {
   project     = var.project
   environment = "prod"
 
-  github_owner   = var.github_owner
-  github_repo    = var.github_repo
-  subject_claims = var.deploy_subject_claims
+  github_owner    = var.github_owner
+  github_repo     = var.github_repo
+  github_owner_id = var.github_owner_id
+  github_repo_id  = var.github_repo_id
+  subject_claims  = var.deploy_subject_claims
 
   site_bucket_arn  = module.site.bucket_arn
   distribution_arn = module.site.distribution_arn
