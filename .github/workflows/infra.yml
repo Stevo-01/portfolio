@@ -22,7 +22,8 @@ on:
 permissions:
   contents: read
   id-token: write
-  pull-requests: write # to post the plan as a comment
+  # No pull-requests: write. The plan is written to the run summary rather than
+  # posted as a comment, so the workflow needs no write access to the PR.
 
 concurrency:
   group: infra-prod
@@ -107,6 +108,21 @@ jobs:
 
   plan:
     needs: check
+    # Not on pull_request, and this is a deliberate limitation rather than an
+    # oversight.
+    #
+    # A plan needs AWS read access, which means assuming the terraform role.
+    # That role's trust policy pins `sub` to refs/heads/main and
+    # environment:prod; a pull_request run presents
+    # `repo:Stevo-01/portfolio:pull_request`, so STS refuses it. That refusal is
+    # correct: widening the trust to `pull_request` would let any PR assume a
+    # role that can create and destroy infrastructure.
+    #
+    # The fix worth doing later is a second, read-only `terraform-plan` role
+    # trusted on pull_request with Get/List/Describe only. Until that exists,
+    # PRs get the full `check` job (fmt, validate, tflint, trivy, the guards)
+    # which needs no credentials, and the plan runs on main before apply.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -126,23 +142,16 @@ jobs:
           terraform plan -no-color -out=tfplan | tee plan.txt
         working-directory: infra/envs/prod
 
-      - name: Comment plan on the PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('infra/envs/prod/plan.txt', 'utf8');
-            // GitHub caps a comment at 65536 characters.
-            const body = plan.length > 60000
-              ? plan.slice(0, 60000) + '\n\n... truncated, see the job log for the full plan.'
-              : plan;
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '### terraform plan\n\n```terraform\n' + body + '\n```',
-            });
+      - name: Plan summary
+        # Surfaced in the run summary rather than as a PR comment: this job no
+        # longer runs on pull_request, so there is no PR to comment on.
+        run: |
+          {
+            echo '### terraform plan'
+            echo '```terraform'
+            head -c 60000 infra/envs/prod/plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   apply:
     needs: plan
