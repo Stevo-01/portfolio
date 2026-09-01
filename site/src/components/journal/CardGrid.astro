@@ -1,0 +1,36 @@
+---
+import BlogCard from './BlogCard.astro';
+import type { Post } from '../../types/content';
+
+interface Props {
+  posts: Post[];
+  showPart?: boolean;
+}
+
+const { posts, showPart } = Astro.props;
+---
+
+<div class="card-grid">
+  {posts.map((post) => <BlogCard post={post} showPart={showPart} />)}
+</div>
+
+<style>
+  /*
+    Three up, denser than the portfolio's two-up project grid. That density is
+    part of how the journal reads as a different publication now that the type
+    no longer separates them.
+  */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+
+  @media (max-width: 1000px) {
+    .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 900px) {
+    .card-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+interface Props {
+  title: string;
+  lead?: string;
+}
+
+const { title, lead } = Astro.props;
+---
+
+<header class="rail">
+  <h2>{title}</h2>
+  {lead && <p>{lead}</p>}
+  <span class="line" aria-hidden="true"></span>
+</header>
+
+<style>
+  .rail {
+    display: grid;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+  }
+
+  h2 {
+    font-size: 22px;
+    letter-spacing: -0.03em;
+  }
+
+  p {
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .line {
+    height: 1px;
+    margin-top: var(--space-3);
+    background: var(--border);
+  }
+</style>

@@ -1,0 +1,152 @@
+---
+import Container from '../ui/Container.astro';
+import Icon from '../ui/Icon.astro';
+import { profile } from '../../data/profile';
+
+interface Props {
+  /** Article count, rendered in the standfirst. */
+  count?: number;
+}
+
+const { count } = Astro.props;
+---
+
+{/*
+  The journal's identity, and the component carrying the most design weight in
+  this slice.
+
+  With one typeface across the whole site, nothing about the TYPE distinguishes
+  the journal from the portfolio. So the separation is made structurally: a
+  title at a scale nothing on the portfolio uses (up to 84px against the hero's
+  78px), the gradient spent on one word, a rule-and-kicker lockup no portfolio
+  section has, and a standfirst set off to the side rather than centred.
+*/}
+<header class="masthead">
+  <Container>
+    <p class="kicker">
+      <Icon name="book-open" size={14} />
+      <span>Writing</span>
+    </p>
+
+    <div class="lockup">
+      <p class="the">
+        <span>The</span>
+        <span class="rule" aria-hidden="true"></span>
+      </p>
+
+      <div class="grid">
+        <h1 class="title">Engineering <span class="accent">Journal</span></h1>
+
+        <p class="standfirst">
+          Notes on retrieval, language models, and getting a model out of a
+          notebook and in front of somebody.
+          {count !== undefined && <span class="count">{count} articles so far.</span>}
+          <span class="byline">Written by {profile.name}.</span>
+        </p>
+      </div>
+    </div>
+  </Container>
+</header>
+
+<style>
+  .masthead {
+    position: relative;
+    padding-block: var(--space-8) var(--space-7);
+    background:
+      radial-gradient(ellipse 70% 60% at 22% 0%, var(--glow-peach), transparent 70%),
+      linear-gradient(180deg, var(--hero-bg), var(--bg));
+    border-bottom: 1px solid var(--border);
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .the {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(270px, 0.55fr);
+    gap: var(--space-7);
+    align-items: end;
+    margin-top: var(--space-3);
+  }
+
+  .title {
+    /* nowrap so the lockup never breaks mid-phrase, which means the floor has
+       to be small enough that "Engineering Journal" fits the container at the
+       narrowest supported width. The brief suggests 46px; measured at 375px
+       that overflows by 40px, and even 40px overflows by 3. Note the overflow
+       is invisible to getBoundingClientRect on the <h1> itself, because a block
+       box stays at container width while its nowrap text spills out -- it only
+       shows up by measuring an inline child. Floor verified at 320px. */
+    /* The outer min() is what makes this safe rather than tuned. A clamp with
+       a fixed floor still overflows once the viewport is narrower than the
+       floor assumed -- 46px overflowed at 375, 40px overflowed by 3, 34px
+       overflowed at 320. Capping at 9vw ties the size to the space actually
+       available, so the lockup cannot spill at any width. "Engineering
+       Journal" measures about 9.5x its font size at this tracking, and the
+       container is 100vw minus 40px, so 9vw always leaves room. */
+    font-size: min(clamp(34px, 5.8vw, 84px), 9vw);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .title .accent {
+    background: linear-gradient(94deg, var(--accent-strong), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .standfirst {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 2px solid var(--accent);
+    color: var(--muted);
+    font-size: 14.5px;
+    line-height: 1.65;
+  }
+
+  .count,
+  .byline {
+    display: block;
+    margin-top: var(--space-2);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+      align-items: start;
+    }
+  }
+</style>

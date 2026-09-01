@@ -1,6 +1,10 @@
 ---
-// STUB: owned by slice 04 (journal-taxonomy).
+import CoverArt from './CoverArt.astro';
+import Icon from '../ui/Icon.astro';
+import { CATEGORY_ART } from './taxonomy';
+import { formatDate, isoDate } from '../../lib';
 import type { Post } from '../../types/content';
+import type { IconName } from '../../types/icons';
 
 interface Props {
   post: Post;
@@ -8,8 +12,167 @@ interface Props {
 }
 
 const { post, showPart } = Astro.props;
+const { data } = post;
+
+const art = CATEGORY_ART[data.category];
+const glyph = (data.heroGlyph as IconName | undefined) ?? art.glyph;
+
+// `minutesRead` is injected by the remark plugin at build time, so it is not on
+// `data` -- it arrives through render(). Reading it here would mean rendering
+// every card's body, so the card takes the cheaper route and omits it when the
+// consumer has not supplied it. See the footer below.
 ---
 
-<article data-stub="blog-card" data-show-part={showPart ? '' : undefined}>
-  <a href={`/blog/${post.id}/`}>{post.data.title}</a>
+<article class="blog-card">
+  {showPart && data.part && <p class="part">Part {data.part}</p>}
+
+  <a class="cover-link" href={`/blog/${post.id}/`} tabindex="-1" aria-hidden="true">
+    <CoverArt category={data.category} variant="card" glyph={glyph} />
+  </a>
+
+  <div class="body">
+    <p class="meta">
+      <span class="cat">{art.title}</span>
+      <span class="sep" aria-hidden="true">·</span>
+      <time datetime={isoDate(data.publishDate)}>{formatDate(data.publishDate, 'short')}</time>
+    </p>
+
+    {/*
+      The only real link in the card. The cover above is aria-hidden and
+      tabindex -1 so the card is one stop in the tab order and announces once,
+      rather than three times for cover, title and footer.
+    */}
+    <h3><a href={`/blog/${post.id}/`}>{data.title}</a></h3>
+
+    <p class="dek">{data.description}</p>
+
+    {/* margin-top:auto pins this to the bottom so footers line up across a row
+        of cards with different title lengths. */}
+    <p class="foot">
+      <span class="read">Read article</span>
+      <Icon name="arrow-right" size={14} />
+    </p>
+  </div>
 </article>
+
+<style>
+  .blog-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface-raised);
+    overflow: hidden;
+    transition:
+      transform var(--dur-ui) var(--ease),
+      border-color var(--dur-ui) var(--ease),
+      box-shadow var(--dur-ui) var(--ease);
+  }
+
+  .blog-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--glow-card-hover);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blog-card:hover {
+      transform: none;
+    }
+  }
+
+  .part {
+    padding: var(--space-3) var(--space-4) 0;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .cover-link {
+    display: block;
+    padding: var(--space-3) var(--space-3) 0;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .cat {
+    color: var(--accent);
+  }
+
+  .sep {
+    color: var(--border-strong);
+  }
+
+  h3 {
+    font-size: 18px;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+  }
+
+  h3 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  /* The whole card is the hit target: the pseudo-element stretches the title's
+     anchor over the card. Only one <a> is focusable, so this stays a single
+     tab stop with no nested interactive elements. */
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .blog-card {
+    position: relative;
+  }
+
+  .blog-card:hover h3 a {
+    color: var(--accent-strong);
+  }
+
+  .dek {
+    color: var(--muted);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  .foot {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: auto;
+    padding-top: var(--space-2);
+    color: var(--accent);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .foot :global(svg) {
+    transition: transform var(--dur-ui) var(--ease);
+  }
+
+  .blog-card:hover .foot :global(svg) {
+    transform: translateX(3px);
+  }
+</style>

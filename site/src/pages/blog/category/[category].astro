@@ -1,0 +1,170 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+
+import JournalLayout from '../../../layouts/JournalLayout.astro';
+import Container from '../../../components/ui/Container.astro';
+import Icon from '../../../components/ui/Icon.astro';
+
+import CardGrid from '../../../components/journal/CardGrid.astro';
+import CategoryTabs from '../../../components/journal/CategoryTabs.astro';
+import EmptyState from '../../../components/journal/EmptyState.astro';
+
+import { CATEGORY_ART } from '../../../components/journal/taxonomy';
+import { getPostsByCategory } from '../../../lib';
+
+/**
+ * Every category gets a page, including the ones with nothing in them.
+ *
+ * Three of the five are empty right now. Generating only the populated ones
+ * would mean the tab strip links to 404s, which is a worse failure than an
+ * empty archive: the reader cannot tell whether the discipline does not exist
+ * or the site is broken.
+ */
+export const getStaticPaths = (async () => {
+  const categories = await getCollection('categories');
+  return categories.map((entry) => ({
+    params: { category: entry.data.slug },
+    props: { entry },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const slug = entry.data.slug;
+const art = CATEGORY_ART[slug];
+
+const posts = await getPostsByCategory(slug);
+---
+
+<JournalLayout
+  title={`${entry.data.title} | The Engineering Journal`}
+  description={entry.data.description}
+>
+  <header class="hero">
+    <Container>
+      <p class="crumb">
+        <a href="/blog/">Journal</a>
+        <span aria-hidden="true">/</span>
+        <span>{entry.data.title}</span>
+      </p>
+
+      <div class="lockup">
+        <span class="badge" aria-hidden="true"><Icon name={art.glyph} size={24} /></span>
+        <div>
+          <h1>{entry.data.title}</h1>
+          <p class="desc">{entry.data.description}</p>
+        </div>
+      </div>
+
+      <p class="count">
+        {posts.length === 0
+          ? 'No articles filed yet'
+          : posts.length === 1
+            ? '1 article'
+            : `${posts.length} articles`}
+      </p>
+    </Container>
+  </header>
+
+  <CategoryTabs active={slug} />
+
+  <section class="band">
+    <Container>
+      {
+        posts.length > 0 ? (
+          <CardGrid posts={posts} />
+        ) : (
+          <EmptyState
+            title={`Nothing filed under ${entry.data.title} yet`}
+            body={entry.data.description}
+          />
+        )
+      }
+    </Container>
+  </section>
+</JournalLayout>
+
+<style>
+  .hero {
+    position: relative;
+    padding-block: var(--space-8) var(--space-6);
+    background:
+      radial-gradient(ellipse 60% 70% at 18% 0%, var(--glow-peach), transparent 70%),
+      linear-gradient(180deg, var(--hero-bg), var(--bg));
+  }
+
+  /* The ruled grid that marks a category hero as a different kind of page from
+     the masthead on the index. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(to right, var(--grid-line) 0 1px, transparent 1px 52px),
+      repeating-linear-gradient(to bottom, var(--grid-line) 0 1px, transparent 1px 52px);
+    -webkit-mask-image: radial-gradient(ellipse 70% 80% at 30% 20%, black, transparent 80%);
+    mask-image: radial-gradient(ellipse 70% 80% at 30% 20%, black, transparent 80%);
+  }
+
+  .hero :global(.site-container) {
+    position: relative;
+  }
+
+  .crumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  .crumb a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .lockup {
+    display: flex;
+    align-items: start;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+
+  .badge {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    border-radius: var(--radius-card);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  h1 {
+    font-size: clamp(30px, 4vw, 52px);
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+  }
+
+  .desc {
+    max-width: 62ch;
+    margin-top: var(--space-3);
+    color: var(--muted);
+    font-size: 15.5px;
+  }
+
+  .count {
+    margin-top: var(--space-5);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  .band {
+    padding-block: var(--space-7) var(--space-8);
+  }
+</style>

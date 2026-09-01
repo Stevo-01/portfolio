@@ -1,5 +1,6 @@
 ---
-// STUB: owned by slice 04 (journal-taxonomy).
+import Icon from '../ui/Icon.astro';
+import { CATEGORY_ART } from './taxonomy';
 import type { CategorySlug } from '../../types/content';
 import type { IconName } from '../../types/icons';
 
@@ -10,12 +11,119 @@ interface Props {
 }
 
 const { category, variant, glyph } = Astro.props;
+
+const art = CATEGORY_ART[category];
+const icon = glyph ?? art.glyph;
 ---
 
-<div
-  data-stub="cover-art"
-  data-category={category}
+{/*
+  The journal's dominant visual signature. Pure CSS, zero image bytes, so it
+  stays sharp at any DPI and costs nothing to serve.
+
+  Every colour comes from a --cover-* token. The gradient runs espresso to pale
+  apricot, and note the ink is DARK: this gradient ends light, so the glyph and
+  the category name sit on the apricot end, where the dark --cover-ink measures
+  12.91:1 and white would measure 1.42:1. A cyan-ending gradient would want the opposite.
+*/}
+<figure
+  class="cover"
   data-variant={variant}
-  data-glyph={glyph}
+  data-category={category}
+  style={`--cover-rotate:${art.rotate}`}
   aria-hidden="true"
-></div>
+>
+  <div class="wash"></div>
+  <div class="arcs"></div>
+  <div class="grid"></div>
+
+  <span class="glyph"><Icon name={icon} size={variant === 'card' ? 34 : 46} /></span>
+  <figcaption class="label">{art.title}</figcaption>
+</figure>
+
+<style>
+  .cover {
+    position: relative;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    /* hue-rotate on the wrapper so gradient, arcs and grid all shift together;
+       rotating only the gradient would leave the overlays out of key. */
+    filter: hue-rotate(var(--cover-rotate));
+  }
+
+  .cover[data-variant='card'] { aspect-ratio: 16 / 10; }
+  .cover[data-variant='lead'] { aspect-ratio: 16 / 15.5; }
+  .cover[data-variant='banner'] { aspect-ratio: 16 / 6.4; }
+
+  .wash,
+  .arcs,
+  .grid {
+    position: absolute;
+    inset: 0;
+  }
+
+  .wash {
+    background: linear-gradient(
+      118deg,
+      var(--cover-1) 0%,
+      var(--cover-2) 26%,
+      var(--cover-3) 58%,
+      var(--cover-4) 82%,
+      var(--cover-5) 100%
+    );
+  }
+
+  /* Three concentric arcs from a focal point below the bottom edge, so only
+     their upper curves show and the artwork reads as a lens rather than a
+     target. */
+  .arcs {
+    background:
+      radial-gradient(
+        circle at 68% 106%,
+        transparent 0 24%,
+        var(--cover-arc-1) 24% 24.6%,
+        transparent 24.6%
+      ),
+      radial-gradient(
+        circle at 68% 106%,
+        transparent 0 42%,
+        var(--cover-arc-2) 42% 42.5%,
+        transparent 42.5%
+      ),
+      radial-gradient(
+        circle at 68% 106%,
+        transparent 0 62%,
+        var(--cover-arc-3) 62% 62.4%,
+        transparent 62.4%
+      );
+  }
+
+  .grid {
+    background-image:
+      repeating-linear-gradient(to right, var(--cover-grid) 0 1px, transparent 1px 52px),
+      repeating-linear-gradient(to bottom, var(--cover-grid) 0 1px, transparent 1px 52px);
+  }
+
+  .glyph {
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: var(--cover-ink);
+  }
+
+  .label {
+    position: absolute;
+    left: var(--space-4);
+    bottom: var(--space-3);
+    color: var(--cover-ink);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .cover[data-variant='card'] .label {
+    font-size: 12px;
+  }
+</style>
