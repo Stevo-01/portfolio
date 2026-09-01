@@ -1,0 +1,58 @@
+---
+interface Props {
+  /** Mark only, no wordmark. Used in the mobile header and the footer. */
+  markOnly?: boolean;
+  class?: string;
+}
+
+const { markOnly, class: className } = Astro.props;
+---
+
+<span class:list={['logo', className]}>
+  <span class="logo-mark" aria-hidden="true">
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4"
+      stroke-linecap="round" stroke-linejoin="round">
+      <!-- Three nodes converging on one output: a retrieval fan-in. Reads as a
+           graph rather than a monogram, which suits a site about pipelines
+           more than initials would. -->
+      <path d="M7 8h5M7 16h5M7 24h5" />
+      <path d="M12 8c7 0 7 8 7 8s0-8 7-8" />
+      <path d="M12 24c7 0 7-8 7-8" />
+      <circle cx="25" cy="16" r="2.6" fill="currentColor" stroke="none" />
+    </svg>
+  </span>
+  {!markOnly && <span class="logo-word">Stephen<span class="logo-dot">.</span></span>}
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+  }
+
+  .logo-mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    color: var(--accent);
+  }
+
+  .logo-mark svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .logo-word {
+    font-size: 17px;
+  }
+
+  .logo-dot {
+    color: var(--accent);
+  }
+</style>

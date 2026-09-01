@@ -1,0 +1,18 @@
+---
+// STUB: owned by slice 01 (layout-chrome).
+interface Props {
+  active?:
+    | 'about'
+    | 'experience'
+    | 'projects'
+    | 'skills'
+    | 'education'
+    | 'blog';
+}
+
+const { active } = Astro.props;
+---
+
+<header data-stub="header" data-active={active}>
+  <!-- STUB: glass header, nav, mobile dialog and theme toggle land in slice 01 -->
+</header>

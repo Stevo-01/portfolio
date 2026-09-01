@@ -1,0 +1,5 @@
+# PLACEHOLDER shape only — slice 07 owns the real copy.
+slug: notebook-to-production
+title: "From notebook to production"
+description: "Packaging, pipelines, run tracking, and what deployment exposes that local never did."
+category: mlops

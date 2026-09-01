@@ -1,0 +1,93 @@
+---
+interface Props {
+  /** Stagger in ms. Siblings usually go 0, 60, 120, … */
+  delay?: number;
+  class?: string;
+  as?: 'div' | 'li' | 'article' | 'section';
+}
+
+const { delay = 0, class: className, as: Tag = 'div' }: Props = Astro.props;
+---
+
+<Tag
+  class:list={['reveal', className]}
+  data-reveal
+  style={delay ? `--reveal-delay:${delay}ms` : undefined}
+>
+  <slot />
+</Tag>
+
+<style>
+  /*
+    Scoped to `scripting: enabled` on purpose. The hidden state is only safe to
+    apply if something will later un-hide it — with JavaScript blocked, an
+    unconditional `opacity: 0` here would make the entire page invisible.
+    Browsers that do not know this media feature fail the query, so they skip
+    the hiding and render everything in final state. Both failure directions
+    land on "content is visible", which is the only acceptable one.
+  */
+  @media (scripting: enabled) {
+    .reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      transition:
+        opacity var(--dur-reveal) var(--ease) var(--reveal-delay, 0ms),
+        transform var(--dur-reveal) var(--ease) var(--reveal-delay, 0ms);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /*
+      Belt and braces with the script below. The script skips observing under
+      reduced motion, but if it fails to run at all this rule still leaves the
+      content visible rather than permanently hidden.
+    */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+  }
+</style>
+
+<script>
+  /*
+    ONE observer for every Reveal on the page, not one per instance. Astro
+    hoists and bundles this block once no matter how many times the component
+    renders, so `querySelectorAll` here sees the whole page — which is the
+    point. A per-instance observer would mean thirty observers on the homepage
+    for no benefit.
+
+    Reduced motion is checked BEFORE any observer is constructed. Building one
+    and then declining to act on it would still schedule work; the preference
+    means "do not animate", so the honest response is to jump straight to the
+    final state and never observe at all.
+  */
+  const targets = document.querySelectorAll<HTMLElement>('[data-reveal]');
+
+  if (targets.length > 0) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      targets.forEach((el) => el.classList.add('is-visible'));
+    } else {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('is-visible');
+            // Fires once. Without this, scrolling back up re-triggers the
+            // transition and the page feels twitchy.
+            observer.unobserve(entry.target);
+          }
+        },
+        { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+      );
+
+      targets.forEach((el) => observer.observe(el));
+    }
+  }
+</script>

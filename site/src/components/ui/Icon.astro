@@ -1,0 +1,47 @@
+---
+import { ICON_PATHS, type IconName } from './icon-paths';
+
+interface Props {
+  name: IconName;
+  size?: number;
+  class?: string;
+  /**
+   * Accessible label. Omit for decorative icons — the default is
+   * `aria-hidden`, because most icons on this site sit beside their own text
+   * label and announcing them twice is worse than not announcing them.
+   */
+  label?: string;
+}
+
+const { name, size = 20, class: className, label } = Astro.props;
+
+const path = ICON_PATHS[name];
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden={label ? undefined : 'true'}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+>
+  {label && <title>{label}</title>}
+  <path d={path} />
+</svg>
+
+<style>
+  svg {
+    /* Icons sit inline beside text constantly. Without this they ride the
+       baseline and push the line box taller than the text. */
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+  }
+</style>

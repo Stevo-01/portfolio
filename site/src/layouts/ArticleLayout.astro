@@ -1,0 +1,23 @@
+---
+// STUB: owned by slice 01 (layout-chrome).
+import type { MarkdownHeading } from 'astro';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  noindex?: boolean;
+  wide?: boolean;
+  headings: MarkdownHeading[];
+}
+
+const { headings, ...rest } = Astro.props;
+---
+
+<BaseLayout {...rest}>
+  <main id="main">
+    <slot />
+    <!-- headings: {headings.length} — slice 05 renders the TOC from these -->
+  </main>
+</BaseLayout>

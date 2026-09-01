@@ -1,0 +1,18 @@
+---
+// STUB: owned by slice 01 (layout-chrome).
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  noindex?: boolean;
+  wide?: boolean;
+}
+
+const props = Astro.props;
+---
+
+<BaseLayout {...props}>
+  <main id="main"><slot /></main>
+</BaseLayout>

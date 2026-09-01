@@ -1,0 +1,14 @@
+---
+interface Props {
+  wide?: boolean;
+  class?: string;
+  /** Element to render as. Defaults to a plain div. */
+  as?: 'div' | 'section' | 'header' | 'footer' | 'nav' | 'main';
+}
+
+const { wide, class: className, as: Tag = 'div' }: Props = Astro.props;
+---
+
+<Tag class:list={['site-container', className]} data-wide={wide ? '' : undefined}>
+  <slot />
+</Tag>

@@ -1,0 +1,203 @@
+/* ============================================================================
+   tokens.css — the only file in this codebase permitted to contain a hex value.
+   Owned by slice 00. A missing token is a request against this file, never a
+   local constant. Transcribed from docs/plans/DESIGN-DELTA.md §1–§6.
+
+   DARK IS THE DEFAULT, NOT A VARIANT. Dark is authored on :root; light is the
+   override on :root[data-theme="light"]. Getting this backwards means every
+   consumer inherits the wrong base.
+
+   Two rules in here are silent failures if broken — both are marked below with
+   the measured ratio that makes them rules rather than preferences.
+   ============================================================================ */
+
+:root {
+  /* --- Palette · dark (default) — DESIGN-DELTA §1 ---------------------------
+     Contrast on --bg #191210: text 15.52:1, accent-2 13.67:1,
+     accent-strong 10.97:1, success 10.61:1, accent 8.17:1, muted 7.18:1.
+     All AAA. --soft measures 4.98:1, which clears AA for body copy. */
+  --bg: #191210; /* page background, deepest espresso  */
+  --surface: #221816; /* alternating section bands          */
+  --surface-raised: #2c1f1b; /* cards, header, popovers            */
+  --border: #382823; /* hairlines, card borders            */
+  --border-strong: #4a362f; /* hover borders, dividers            */
+  --text: #f5e9e1; /* primary copy, cream                */
+  --muted: #b39d91; /* secondary copy, body paragraphs    */
+  --soft: #98806f; /* meta, timestamps, captions         */
+  --accent: #fb923c; /* peach — links, active nav, bullets */
+  --accent-strong: #fdba74; /* soft peach — hover, gradient start */
+  --accent-2: #fed7aa; /* pale apricot — gradient end        */
+  --accent-soft: #3a2317; /* tag and chip backgrounds           */
+  --success: #4ade80; /* availability dot                   */
+
+  /* --- Atmosphere · dark — DESIGN-DELTA §3 --------------------------------
+     Named for the colour they actually carry. The reference palette called
+     these --glow-cyan and --glow-teal; a token named for the wrong hue
+     survives three refactors and then confuses somebody at midnight. */
+  --glow-peach: #fb923c35;
+  --glow-apricot: #fed7aa24;
+  --glow-deep: #7c2d1238;
+  --grid-line: #fdba740c;
+  --header-bg: #191210d9;
+
+  /* Must differ from --bg by a perceptible but small amount, or the
+     --hero-bg → --bg gradient behind the hero and the journal masthead reads
+     as a flat band with a visible seam instead of a wash. */
+  --hero-bg: #221714;
+
+  /* Slightly higher than a cool-dark site would need: a warm dark surface
+     shows banding in a large soft gradient more readily. If banding still
+     appears on the hero at 1440px, raise this to 0.032 before reaching for
+     anything else. */
+  --noise-opacity: 0.028;
+
+  /* --- Effects · dark — DESIGN-DELTA §4 -----------------------------------
+     Derived from the palette above. They live here rather than at the call
+     site so no component ever needs to spell out a hex. */
+  --glow-cta: 0 8px 28px #fb923c40; /* primary CTA at rest */
+  --glow-cta-hover: 0 12px 34px #fb923c59; /* primary CTA on hover */
+  --glow-card-hover: 0 12px 40px #fb923c1f; /* card lift */
+  --shadow-card: 0 10px 32px #0c07054d; /* card at rest */
+  --edge-light: linear-gradient(90deg, transparent, #fdba7440, transparent);
+
+  /* ⚠️ INVERTS BETWEEN THEMES, and getting it wrong is invisible in dark mode.
+     White on the peach CTA fill #FB923C measures 2.26:1 — a hard fail. Dark
+     espresso on it measures 8.37:1. In light mode the accent darkens to
+     #C2410C and the relationship flips, so this token is #FFFFFF there. Any
+     component that hardcodes either value breaks in the other theme. */
+  --on-accent: #1a0e05;
+
+  /* --- Cover art — DESIGN-DELTA §5 ----------------------------------------
+     The journal's CSS-only cover artwork (slice 04). Declared once, outside
+     the light override: a cover is a printed artefact, not a themed surface,
+     so it renders identically in both themes. Raw peach is permitted here
+     because it is a large decorative fill and never carries text.
+
+     Note the ink is DARK. This gradient ends pale — the apricot stop is where
+     the glyph and category name sit — so #2A1408 on #FED7AA measures 12.91:1,
+     where white would be 1.42:1 and effectively invisible. A cyan-ending
+     gradient would want the opposite; do not carry that convention over.
+     Per-category hue-rotate is applied by CoverArt.astro, not stored here. */
+  --cover-1: #2a1408; /* gradient stop   0% — darkest espresso */
+  --cover-2: #7c2d12; /* gradient stop  26%                    */
+  --cover-3: #c2410c; /* gradient stop  58%                    */
+  --cover-4: #fb923c; /* gradient stop  82%                    */
+  --cover-5: #fed7aa; /* gradient stop 100% — pale apricot     */
+  --cover-arc-1: #ffffff1a; /* inner concentric arc  */
+  --cover-arc-2: #ffffff12; /* middle arc            */
+  --cover-arc-3: #ffffff0d; /* outer arc             */
+  --cover-grid: #ffffff0d; /* 52px engineering grid */
+  --cover-ink: #2a1408; /* glyph + category name */
+  --cover-ink-soft: #2a1408b0; /* cover kicker          */
+
+  /* --- Type — DESIGN-DELTA §6 ---------------------------------------------
+     One family. No serif anywhere. Self-hosted; no Google Fonts origin, which
+     keeps font-src 'self' in the CSP and removes two origins from the
+     critical path. */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-hero: clamp(42px, 5.4vw, 78px);
+  --text-masthead: clamp(46px, 5.8vw, 84px);
+  --text-h1-article: clamp(34px, 4.4vw, 60px);
+  --text-h2: clamp(30px, 3.2vw, 44px);
+  --text-h3: clamp(20px, 1.6vw, 23px);
+  --text-body: 16.5px;
+  --text-prose: 17px;
+  --text-meta: 13.5px;
+  --text-kicker: 10.5px;
+  --text-mono: 13.5px;
+
+  /* --- Radii — deliberately larger than the mockups' 14px ----------------- */
+  --radius-card: 16px;
+  --radius-button: 12px;
+  --radius-pill: 999px;
+  --radius-sm: 8px;
+
+  /* --- Layout ------------------------------------------------------------- */
+  --container: min(100% - 40px, 1100px);
+  --container-wide: min(100% - 40px, 1280px);
+  --header-h: 68px;
+  --section-y: clamp(96px, 9vw, 120px);
+
+  /* --- Space scale -------------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* --- Motion -------------------------------------------------------------
+     One easing curve for the whole site. 150–200ms for UI, 400–600ms for
+     reveals. The reduced-motion block in global.css zeroes these. */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-ui: 180ms;
+  --dur-slow: 200ms;
+  --dur-reveal: 500ms;
+
+  /* Form controls and scrollbars follow the theme. */
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  /* --- Palette · light (opt-in override) — DESIGN-DELTA §2 ----------------
+
+     ⚠️ THE RULE THAT MATTERS: #FB923C measures 2.22:1 on this background and
+     fails AA badly. #FDBA74 measures 1.65:1, which is worse than not styling
+     the text at all. Neither may be used for text, icons, borders, or focus
+     rings in light mode — only inside large decorative fills (aurora blobs,
+     cover art). Peach on off-white looks fine on a bright laptop screen, which
+     is precisely why this needs to be a written rule.
+
+     Contrast on --bg #FFFCFA, then on the harder case --surface #F7F0EA:
+       --text          17.92 / 16.22  AAA
+       --accent-strong  7.15 /  6.47  AA
+       --muted          6.88 /  6.22  AA
+       --success        5.37 /  4.86  AA
+       --accent         5.07 /  4.59  AA
+       --accent-2       4.92 /  4.45  large/decorative only
+       --soft           3.96 /  3.58  large or bold only
+
+     Pure white is deliberately not the background. #FFFCFA carries a trace of
+     the warm hue through both themes, so light reads as the same site rather
+     than a different one. */
+  --bg: #fffcfa;
+  --surface: #f7f0ea;
+  --surface-raised: #ffffff;
+  --border: #eadfd6;
+  --border-strong: #d8c7ba;
+  --text: #1b1310;
+  --muted: #6b5449;
+  --soft: #93796b; /* ≥18.66px bold or ≥24px regular only. Never body copy. */
+  --accent: #c2410c;
+  --accent-strong: #9a3412;
+  --accent-2: #b45309; /* gradients and large fills only — 4.45:1 on --surface */
+  --accent-soft: #fcece0;
+  --success: #047857;
+
+  /* --- Atmosphere · light — DESIGN-DELTA §3 ------------------------------- */
+  --glow-peach: #fb923c24;
+  --glow-apricot: #fdba741a;
+  --glow-deep: #c2410c14;
+  --grid-line: #c2410c10;
+  --header-bg: #fffcfad9;
+  --hero-bg: #fff7f1;
+  --noise-opacity: 0.02;
+
+  /* --- Effects · light — DESIGN-DELTA §4 ---------------------------------- */
+  --glow-cta: 0 8px 28px #c2410c33;
+  --glow-cta-hover: 0 12px 34px #c2410c40;
+  --glow-card-hover: 0 12px 40px #c2410c1a;
+  --shadow-card: 0 10px 32px #3a231714;
+  --edge-light: linear-gradient(90deg, transparent, #c2410c33, transparent);
+
+  /* The inversion. White clears AA on the darkened accent (5.18:1); the dark
+     ink used in the default theme would fail here. */
+  --on-accent: #ffffff;
+
+  color-scheme: light;
+}

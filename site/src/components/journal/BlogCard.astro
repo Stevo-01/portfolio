@@ -1,0 +1,15 @@
+---
+// STUB: owned by slice 04 (journal-taxonomy).
+import type { Post } from '../../types/content';
+
+interface Props {
+  post: Post;
+  showPart?: boolean;
+}
+
+const { post, showPart } = Astro.props;
+---
+
+<article data-stub="blog-card" data-show-part={showPart ? '' : undefined}>
+  <a href={`/blog/${post.id}/`}>{post.data.title}</a>
+</article>

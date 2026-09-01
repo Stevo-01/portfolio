@@ -1,0 +1,80 @@
+---
+// STUB: owned by slice 03 (homepage).
+//
+// Slice 00 ships a route so the build produces output and the contract layer
+// can be verified end to end. Everything visible here is scaffolding: slice 03
+// replaces this file with the assembled homepage.
+import PortfolioLayout from '../layouts/PortfolioLayout.astro';
+import Button from '../components/ui/Button.astro';
+import Container from '../components/ui/Container.astro';
+import Icon from '../components/ui/Icon.astro';
+import Reveal from '../components/ui/Reveal.astro';
+import Tag from '../components/ui/Tag.astro';
+import { getCategoryCounts, getPublishedPosts, formatDate } from '../lib';
+
+const posts = await getPublishedPosts();
+const counts = await getCategoryCounts();
+---
+
+<PortfolioLayout
+  title="Stephen Adedigba | AI & Machine Learning Engineer"
+  description="Foundation-layer smoke test. Slice 03 replaces this page with the real homepage."
+>
+  <Container>
+    <Reveal>
+      <span class="kicker">Slice 00 · foundation</span>
+      <h1>Contract layer <span class="accent">is up</span></h1>
+      <p>
+        This page exists to prove the token layer, the UI primitives, the content
+        schema and the library helpers all resolve. It is not the homepage.
+      </p>
+
+      <p class="row">
+        <Button variant="primary" icon="arrow-right">Primary CTA</Button>
+        <Button variant="secondary" icon="mail">Secondary</Button>
+        <Button variant="ghost">Ghost</Button>
+        <Button variant="secondary" disabled>Disabled</Button>
+      </p>
+
+      <p class="row">
+        <Tag label="tokens" />
+        <Tag label="types" />
+        <Tag label="lib" />
+        <Icon name="brain" label="Machine learning" />
+        <Icon name="sparkles" />
+        <Icon name="eye" />
+      </p>
+    </Reveal>
+
+    <Reveal delay={60}>
+      <h2 class="section-heading">Published <span class="accent">posts</span></h2>
+      <ul>
+        {
+          posts.map((post) => (
+            <li>
+              {post.data.title} — {formatDate(post.data.publishDate, 'short')}
+            </li>
+          ))
+        }
+      </ul>
+      <p>
+        <strong>{posts.length}</strong> published. Counts per discipline:
+        <code>{JSON.stringify(counts)}</code>
+      </p>
+    </Reveal>
+  </Container>
+</PortfolioLayout>
+
+<style>
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-block: var(--space-5);
+  }
+
+  ul {
+    color: var(--muted);
+  }
+</style>
