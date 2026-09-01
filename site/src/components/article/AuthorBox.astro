@@ -1,0 +1,86 @@
+---
+import Avatar from '../ui/Avatar.astro';
+import Icon from '../ui/Icon.astro';
+import { profile } from '../../data/profile';
+
+const initials = profile.name
+  .split(' ')
+  .map((p) => p[0])
+  .join('')
+  .slice(0, 2);
+
+// The bio is the third about paragraph: the one explaining the route in through
+// analysis. It is the most useful thing to know about the author at the end of
+// a technical piece, and reading it from data means it never drifts.
+const bio = profile.about[profile.about.length - 1] ?? profile.tagline;
+---
+
+<aside class="author">
+  <Avatar initials={initials} size={52} />
+
+  <div class="text">
+    <p class="kicker">Written by</p>
+    <p class="name">{profile.name}</p>
+    <p class="bio">{bio}</p>
+
+    <p class="links">
+      <a href="/#contact">
+        <Icon name="mail" size={14} />
+        <span>Get in touch</span>
+      </a>
+    </p>
+  </div>
+</aside>
+
+<style>
+  .author {
+    display: flex;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+
+  .text { display: grid; gap: var(--space-2); }
+
+  .kicker {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .name {
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  .bio {
+    max-width: 62ch;
+    color: var(--muted);
+    font-size: 14.5px;
+    line-height: 1.65;
+  }
+
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .links a:hover { color: var(--accent-strong); }
+
+  @media (max-width: 900px) {
+    .author { flex-direction: column; gap: var(--space-4); }
+  }
+</style>

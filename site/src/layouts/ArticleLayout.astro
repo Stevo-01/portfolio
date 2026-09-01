@@ -30,6 +30,14 @@ const { headings, ...rest } = Astro.props;
       <slot />
     </div>
   </div>
+
+  {/*
+    Full-bleed content after the article, still inside <main> and before the
+    footer. The related-reading band needs the full page width, and the shell
+    above constrains everything to a 220px rail plus a 68ch measure, so it
+    cannot come through the default slot.
+  */}
+  <slot name="after" />
 </JournalLayout>
 
 <style>

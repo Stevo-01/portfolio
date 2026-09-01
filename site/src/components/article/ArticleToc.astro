@@ -1,0 +1,107 @@
+---
+import type { MarkdownHeading } from 'astro';
+import { railNumber } from '../../lib';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+// Depth 2 only. An article's h3s are subsections of an argument, and listing
+// them turns a nine-line contents into a thirty-line one nobody scans.
+const entries = headings.filter((h) => h.depth === 2);
+---
+
+{
+  entries.length > 1 && (
+    <nav class="toc" aria-labelledby="toc-title">
+      <p class="toc-title" id="toc-title">Contents</p>
+
+      <ol>
+        {entries.map((h, i) => (
+          <li>
+            <a href={`#${h.slug}`}>
+              {/*
+                padStart, not '0' + i. The naive form renders the tenth entry
+                as "010" and it only shows up on articles long enough to have
+                ten sections, which is late. railNumber() lives in src/lib for
+                exactly this reason.
+              */}
+              <span class="num">{railNumber(i + 1)}</span>
+              <span class="text">{h.text}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
+<style>
+  /*
+    Stickiness and the collapse breakpoint belong to ArticleLayout, which owns
+    the two-column grid. This component owns only how the list looks in either
+    state.
+  */
+  .toc {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .toc-title {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  ol {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: 7px;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.45;
+    text-decoration: none;
+    transition: color var(--dur-ui) var(--ease);
+  }
+
+  a:hover {
+    color: var(--accent-strong);
+  }
+
+  .num {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    /* Tabular so 01 and 10 occupy the same width and the titles stay aligned. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  a:hover .num {
+    color: var(--accent);
+  }
+
+  /* Below the article breakpoint the rail sits above the prose, so the list
+     becomes a bordered panel rather than a bare column floating over the copy. */
+  @media (max-width: 1000px) {
+    .toc {
+      padding: var(--space-5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+    }
+  }
+</style>
