@@ -1,0 +1,96 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { IconName } from '../../types/icons';
+import { seedIcons } from './seed';
+
+interface Props {
+  icons: IconName[];
+}
+
+const { icons } = Astro.props;
+
+// Seeded at build time. The positions in the served HTML are the positions the
+// script starts from, so nothing jumps on hydration and the reduced-motion path
+// needs no JavaScript at all.
+const seeds = seedIcons(icons);
+---
+
+<div class="drift" data-drift-host aria-hidden="true">
+  {
+    seeds.map((s) => (
+      <span
+        class="drift-icon"
+        data-drift
+        data-x={s.x}
+        data-y={s.y}
+        data-vx={s.vx}
+        data-vy={s.vy}
+        data-rotation={s.rotation}
+        data-spin={s.spin}
+        data-size={s.size}
+        style={`
+          --drift-size:${s.size}px;
+          --drift-opacity:${s.opacity};
+          --drift-blur:${((1 - s.depth) * 2).toFixed(2)}px;
+          left:${s.x}%;
+          top:${s.y}%;
+          transform: rotate(${s.rotation}deg);
+        `}
+      >
+        <Icon name={s.name} size={s.size} />
+      </span>
+    ))
+  }
+</div>
+
+<style>
+  .drift {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    /* Never interactive. The field sits under the hero copy and must not eat a
+       click or a text selection. */
+    pointer-events: none;
+  }
+
+  .drift-icon {
+    position: absolute;
+    /* Seeded position comes from inline left/top percentages, so the icon is
+       already scattered in the served HTML. The rAF loop then writes transform
+       as a DELTA from that origin. A percentage translate would not work here:
+       transform percentages resolve against the element's own box, so
+       translate3d(50%,50%) on a 32px sprite moves it 16px rather than to the
+       middle of the field. */
+    width: var(--drift-size);
+    height: var(--drift-size);
+    color: var(--accent-strong);
+    opacity: var(--drift-opacity);
+    /* Set once, never animated. Far icons blur slightly, which is what makes
+       the field read as depth rather than as clutter at one plane. */
+    filter: blur(var(--drift-blur));
+    will-change: transform;
+  }
+
+  /*
+    Light mode needs the field damped. --accent-strong darkens there, and a dark
+    mark on cream carries far more contrast at the same opacity than a peach
+    mark on espresso does, so the identical value reads roughly twice as loud.
+    Compared against both screenshots rather than assumed to be symmetric.
+  */
+  :global(:root[data-theme='light']) .drift-icon {
+    opacity: calc(var(--drift-opacity) * 0.62);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drift-icon {
+      will-change: auto;
+    }
+  }
+</style>
+
+<script>
+  import { startDrift } from './drift';
+
+  const host = document.querySelector<HTMLElement>('[data-drift-host]');
+  if (host) startDrift(host);
+</script>
