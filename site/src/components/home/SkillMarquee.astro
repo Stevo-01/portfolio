@@ -1,0 +1,113 @@
+---
+import Icon from '../ui/Icon.astro';
+import { stack } from '../../data/stack';
+
+// The track is duplicated so the animation can translate a full track width and
+// land exactly where it started. One copy would snap back visibly at the loop
+// point. The clone is aria-hidden: a screen reader should hear the stack once.
+---
+
+<div class="marquee" data-marquee>
+  <div class="track">
+    <ul class="row">
+      {
+        stack.map((item) => (
+          <li>
+            <Icon name={item.icon} size={16} />
+            <span>{item.name}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <ul class="row" aria-hidden="true">
+      {
+        stack.map((item) => (
+          <li>
+            <Icon name={item.icon} size={16} />
+            <span>{item.name}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>
+
+<style>
+  .marquee {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--space-4);
+    /* Fades both ends so items enter and leave rather than being cut off at a
+       hard edge. */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+  }
+
+  .track {
+    display: flex;
+    width: max-content;
+    /* transform only. Animating scroll position or margin would lay out and
+       paint on every frame. */
+    animation: marquee 42s linear infinite;
+  }
+
+  .marquee:hover .track,
+  .marquee:focus-within .track {
+    animation-play-state: paused;
+  }
+
+  .row {
+    display: flex;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0 var(--space-2) 0 0;
+    list-style: none;
+  }
+
+  .row li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--surface-raised);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .row li :global(svg) {
+    color: var(--accent);
+  }
+
+  @keyframes marquee {
+    from { transform: translate3d(0, 0, 0); }
+    /* Exactly one track width: the second copy is now where the first was. */
+    to   { transform: translate3d(-50%, 0, 0); }
+  }
+
+  /*
+    Stopped, not slowed. The global reduced-motion block zeroes durations, which
+    for an infinite linear animation would leave it parked at its final frame
+    (a half-scrolled track). Setting animation: none holds it at the start.
+  */
+  @media (prefers-reduced-motion: reduce) {
+    .track {
+      animation: none;
+    }
+  }
+</style>

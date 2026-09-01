@@ -1,0 +1,67 @@
+---
+import CaseStudyCard from './CaseStudyCard.astro';
+import ProjectCard from './ProjectCard.astro';
+import Reveal from '../ui/Reveal.astro';
+import Section from './Section.astro';
+import SectionHeading from './SectionHeading.astro';
+import { caseStudies } from '../../data/case-studies';
+import { projects } from '../../data/projects';
+import { headings } from '../../data/sections';
+---
+
+<Section id="projects" band="surface">
+  {/*
+    No standfirst. One was drafted here and removed: it was prose living in a
+    component, which is the rule this section exists to keep. `philosophy.ts`
+    carries its own `lead`, so the pattern exists in data; `projects` has no
+    equivalent field. That is a gap for slice 07 to fill rather than something
+    to work around here. Reported in the slice handoff.
+  */}
+  <SectionHeading heading={headings.projects} />
+
+  <div class="studies">
+    {
+      caseStudies.map((study, i) => (
+        <Reveal delay={i * 60}>
+          <CaseStudyCard study={study} />
+        </Reveal>
+      ))
+    }
+  </div>
+
+  <div class="secondary">
+    {
+      projects.map((project, i) => (
+        <Reveal delay={i * 60}>
+          <ProjectCard project={project} />
+        </Reveal>
+      ))
+    }
+  </div>
+</Section>
+
+<style>
+  .studies {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .secondary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+
+  /* Reveal is the grid item, so the card inside needs to fill it or two cards
+     in a row end up different heights. */
+  .secondary :global(.reveal) {
+    display: grid;
+  }
+
+  @media (max-width: 900px) {
+    .secondary {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

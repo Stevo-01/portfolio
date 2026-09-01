@@ -1,0 +1,196 @@
+---
+import Icon from '../ui/Icon.astro';
+import Section from './Section.astro';
+import SectionHeading from './SectionHeading.astro';
+import { certifications, degrees } from '../../data/education';
+import { headings } from '../../data/sections';
+---
+
+<Section id="education">
+  <SectionHeading heading={headings.education} />
+
+  <div class="edu-grid">
+    <article class="card">
+      <h3>
+        <Icon name="graduation-cap" size={18} />
+        <span>Degrees</span>
+      </h3>
+
+      <ol class="degrees">
+        {
+          degrees.map((d) => (
+            <li>
+              <div class="deg-head">
+                <p class="qualification">{d.qualification}</p>
+                {/* Empty for two of the three: the source resume dates none of
+                    them. Rendered conditionally rather than as an empty gap. */}
+                {d.period && <p class="period">{d.period}</p>}
+              </div>
+              {/*
+                The spaces around the separator are literal, not just CSS
+                margin. The middot is aria-hidden, so without them a screen
+                reader runs the two straight together: "University Malaysia
+                SarawakSarawak, Malaysia". The same applies to copied text.
+              */}
+              <p class="institution">
+                {d.institution}{' '}
+                <span class="sep" aria-hidden="true">·</span>{' '}
+                {d.location}
+              </p>
+              {d.notes.length > 0 && (
+                <ul class="accent-list notes">
+                  {d.notes.map((n) => (
+                    <li>{n}</li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </article>
+
+    <article class="card">
+      <h3>
+        <Icon name="award" size={18} />
+        <span>Certifications</span>
+      </h3>
+
+      <ul class="certs">
+        {
+          certifications.map((c) => (
+            <li>
+              {/* An empty url renders as plain text, never as a dead link. */}
+              {c.url ? (
+                <a href={c.url} rel="noopener noreferrer" target="_blank">
+                  <span>{c.title}</span>
+                  <Icon name="external-link" size={13} />
+                </a>
+              ) : (
+                <span class="cert-title">{c.title}</span>
+              )}
+              <span class="issuer">{c.issuer}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </article>
+  </div>
+</Section>
+
+<style>
+  .edu-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .card h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+    font-size: 16px;
+  }
+
+  .card h3 :global(svg) {
+    color: var(--accent);
+  }
+
+  .degrees,
+  .certs {
+    display: grid;
+    gap: var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .degrees > li + li {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+  }
+
+  .deg-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    align-items: baseline;
+  }
+
+  .qualification {
+    color: var(--text);
+    font-size: 16.5px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  .period {
+    color: var(--accent-strong);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .institution {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .sep {
+    margin-inline: var(--space-2);
+    color: var(--border-strong);
+  }
+
+  .notes {
+    margin-top: var(--space-3);
+    font-size: 14px;
+  }
+
+  .certs {
+    gap: var(--space-4);
+  }
+
+  .certs li {
+    display: grid;
+    gap: 2px;
+  }
+
+  .certs a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .certs a:hover {
+    color: var(--accent-strong);
+  }
+
+  .cert-title {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .issuer {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  @media (max-width: 900px) {
+    .edu-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .deg-head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

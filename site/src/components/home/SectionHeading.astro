@@ -1,0 +1,58 @@
+---
+import type { SectionHeading } from '../../types/portfolio';
+
+interface Props {
+  heading: SectionHeading;
+  /** Optional standfirst under the heading. */
+  lead?: string;
+}
+
+const { heading, lead } = Astro.props;
+---
+
+<header class="heading-block">
+  <p class="rail">
+    <span class="rail-num">{heading.index}</span>
+    <span class="rail-line" aria-hidden="true"></span>
+  </p>
+
+  <h2 class="section-heading">
+    {heading.lead} <span class="accent">{heading.accent}</span>
+  </h2>
+
+  {lead && <p class="heading-lead">{lead}</p>}
+</header>
+
+<style>
+  .heading-block {
+    margin-bottom: var(--space-7);
+  }
+
+  .rail {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .rail-num {
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    color: var(--accent);
+  }
+
+  .rail-line {
+    flex: 1;
+    max-width: 96px;
+    height: 1px;
+    background: var(--border-strong);
+  }
+
+  .heading-lead {
+    max-width: 62ch;
+    margin-top: var(--space-4);
+    color: var(--muted);
+  }
+</style>

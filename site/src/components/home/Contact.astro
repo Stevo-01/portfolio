@@ -1,0 +1,179 @@
+---
+import Button from '../ui/Button.astro';
+import Icon from '../ui/Icon.astro';
+import Section from './Section.astro';
+import { contact } from '../../data/contact';
+import { headings } from '../../data/sections';
+---
+
+<Section id="contact" band="surface">
+  <div class="contact">
+    <span class="badge" aria-hidden="true">
+      <Icon name="message-circle" size={22} />
+    </span>
+
+    <p class="rail-num">{headings.contact.index}</p>
+
+    <h2 class="section-heading">
+      {headings.contact.lead} <span class="accent">{headings.contact.accent}</span>
+    </h2>
+
+    <p class="heading">{contact.heading}</p>
+    <p class="lead">{contact.lead}</p>
+
+    <div class="ctas">
+      <Button variant="primary" href={`mailto:${contact.channels[0].value}`} icon="mail">
+        Email me
+      </Button>
+      <Button variant="secondary" href={contact.channels[1].href} icon="phone">
+        Call
+      </Button>
+    </div>
+
+    <ul class="channels">
+      {
+        contact.channels.map((c) => (
+          <li>
+            <Icon name={c.icon} size={15} />
+            {/* An empty href renders as text, not as a link to nowhere. */}
+            {c.href ? <a href={c.href}>{c.value}</a> : <span>{c.value}</span>}
+          </li>
+        ))
+      }
+    </ul>
+
+    <ul class="socials">
+      {
+        contact.socials.map((s) => (
+          <li>
+            {s.href ? (
+              <a href={s.href} aria-label={s.label} rel="me noopener">
+                <Icon name={s.icon} size={18} />
+              </a>
+            ) : (
+              /*
+                Unconfirmed URL. A disabled control states "this exists but I
+                cannot link it" honestly; a link to "#" states nothing and
+                wastes a click. See the TODO in data/profile.ts.
+              */
+              <span class="disabled" title={`${s.label} link not confirmed yet`}>
+                <Icon name={s.icon} size={18} label={`${s.label} (link unavailable)`} />
+              </span>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Section>
+
+<style>
+  .contact {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: var(--space-4);
+  }
+
+  .badge {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .rail-num {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+  }
+
+  .heading {
+    color: var(--text);
+    font-size: 19px;
+    font-weight: 600;
+  }
+
+  .lead {
+    max-width: 56ch;
+    color: var(--muted);
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+
+  .channels {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3) var(--space-6);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .channels li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .channels :global(svg) {
+    color: var(--accent);
+  }
+
+  .channels a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .channels a:hover {
+    color: var(--accent-strong);
+  }
+
+  .socials {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .socials a,
+  .socials .disabled {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-button);
+    color: var(--muted);
+    transition:
+      color var(--dur-ui) var(--ease),
+      border-color var(--dur-ui) var(--ease);
+  }
+
+  .socials a:hover {
+    color: var(--accent-strong);
+    border-color: var(--border-strong);
+  }
+
+  .socials .disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+</style>

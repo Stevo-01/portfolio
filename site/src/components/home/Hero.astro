@@ -1,0 +1,249 @@
+---
+import BackgroundField from '../background/BackgroundField.astro';
+import Button from '../ui/Button.astro';
+import Container from '../ui/Container.astro';
+import Icon from '../ui/Icon.astro';
+import { degrees } from '../../data/education';
+import { hero } from '../../data/hero';
+
+// The name is split so only the surname carries the gradient. Gradient text is
+// spent on exactly two things across the whole site: this and the journal
+// masthead. A third use would make all three ordinary.
+const [firstName, ...rest] = hero.name.split(' ');
+const lastName = rest.join(' ');
+
+// Derived from the education data rather than written here. The site leads with
+// "AI & Machine Learning Engineer" because that is what the work is, and the
+// doctorate belongs beside it rather than buried six sections down. Reading it
+// from `degrees[0]` means a change there cannot leave this line stale, and it
+// keeps the component free of content it does not own.
+const doctorate = degrees[0];
+const doctorateLine = doctorate
+  ? `${doctorate.qualification}, ${doctorate.institution}`
+  : undefined;
+---
+
+<section class="hero" id="top">
+  <BackgroundField />
+
+  <Container class="hero-inner">
+    <p class="availability">
+      <span class="dot" aria-hidden="true"></span>
+      {hero.availability}
+    </p>
+
+    <p class="greeting">{hero.greeting}</p>
+
+    {/*
+      The space is explicit. A newline between the expression and the span
+      collapses to nothing in the compiled output, which renders the name as
+      one run: "StephenAdedigba".
+    */}
+    <h1 class="hero-name">{firstName} <span class="accent">{lastName}</span></h1>
+
+    <p class="role">{hero.role}</p>
+
+    <p class="lead">{hero.lead}</p>
+
+    <p class="location">
+      <Icon name="map-pin" size={16} />
+      {hero.location}
+      {
+        doctorateLine && (
+          <>
+            <span class="sep" aria-hidden="true">·</span>
+            <span class="phd">{doctorateLine}</span>
+          </>
+        )
+      }
+    </p>
+
+    <div class="ctas">
+      <Button variant="primary" href={hero.primaryCta.href} icon={hero.primaryCta.icon}>
+        {hero.primaryCta.label}
+      </Button>
+      <Button variant="secondary" href={hero.secondaryCta.href} icon={hero.secondaryCta.icon}>
+        {hero.secondaryCta.label}
+      </Button>
+    </div>
+
+    {/*
+      In the flow directly under the CTAs rather than pinned to the bottom of
+      the viewport. Absolutely positioned it sat 140px below the buttons with
+      nothing between, which read as a stray control instead of the next step
+      after them.
+    */}
+    <a class="scroll-cue" href={hero.scrollCueHref} aria-label={hero.scrollCueLabel}>
+      <Icon name="arrow-down" size={18} />
+    </a>
+  </Container>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    align-items: center;
+    /* dvh so mobile browser chrome collapsing does not leave a gap, with vh
+       first for anything that does not know dvh.
+
+       The header height is subtracted because `main` already pads the page down
+       by --header-h to clear the fixed header. Without that term the hero is a
+       full viewport tall *below* an extra 68px, so it overruns the fold and the
+       vertically centred content sits noticeably low. */
+    min-height: calc(100vh - var(--header-h));
+    min-height: calc(100dvh - var(--header-h));
+    padding-block: var(--space-7);
+    background: var(--hero-bg);
+    overflow: hidden;
+  }
+
+  /* The background field is absolutely positioned at z-index 0; content has to
+     be lifted above it explicitly or it renders behind the aurora. */
+  .hero :global(.hero-inner) {
+    position: relative;
+    z-index: 1;
+    /* Centred. The flex column is what lets the pill and the CTA row centre as
+       boxes; text-align alone would centre the text inside them but leave the
+       boxes themselves flush left. */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .availability {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--header-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--success);
+    /* The soft ring is a box-shadow rather than a pseudo-element so it cannot
+       affect layout, and it is static: a pulsing dot on a page that already has
+       a drifting background is one motion too many. */
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 22%, transparent);
+  }
+
+  .greeting {
+    margin-top: var(--space-5);
+    color: var(--muted);
+    font-size: 18px;
+  }
+
+  .hero-name {
+    margin-top: var(--space-2);
+    font-size: var(--text-hero);
+    letter-spacing: -0.045em;
+    line-height: 1.02;
+  }
+
+  .hero-name .accent {
+    background: linear-gradient(96deg, var(--accent-strong), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .role {
+    margin-top: var(--space-4);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+
+  .lead {
+    max-width: 62ch;
+    /* auto side margins so the measure stays readable while the block itself
+       sits centred. */
+    margin: var(--space-5) auto 0;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.7;
+  }
+
+  .location {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    color: var(--soft);
+    /* --soft is below AA for body copy, so it is used here at meta weight and
+       nowhere near a paragraph. */
+    font-size: var(--text-meta);
+  }
+
+  .location :global(svg) {
+    color: var(--accent);
+  }
+
+  .sep {
+    color: var(--border-strong);
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .scroll-cue {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-top: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--muted);
+    background: var(--header-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: cue 2.4s var(--ease) infinite;
+  }
+
+  .scroll-cue:hover {
+    color: var(--accent-strong);
+    border-color: var(--border-strong);
+  }
+
+  @keyframes cue {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(6px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .phd,
+    .sep {
+      /* Two clauses on one line wraps badly at 375px and the doctorate is
+         stated again in the education section, so the short form is enough
+         here. */
+      display: none;
+    }
+
+  }
+</style>

@@ -1,0 +1,123 @@
+---
+import Tag from '../ui/Tag.astro';
+import type { CaseStudy } from '../../types/portfolio';
+
+interface Props {
+  study: CaseStudy;
+}
+
+const { study } = Astro.props;
+---
+
+<article class="card card-featured study">
+  <p class="kicker">Case study</p>
+
+  <h3>{study.title}</h3>
+  <p class="company">{study.company}</p>
+  <p class="summary">{study.summary}</p>
+
+  {/*
+    Problem / approach / result, three up. This is the shape an interviewer
+    asks in, so it is the shape the card answers in. Result is emphasised
+    because it is the part a reader skims for.
+  */}
+  <div class="par">
+    <div class="par-cell">
+      <h4>Problem</h4>
+      <p>{study.problem}</p>
+    </div>
+    <div class="par-cell">
+      <h4>Approach</h4>
+      <p>{study.approach}</p>
+    </div>
+    <div class="par-cell par-result">
+      <h4>Result</h4>
+      <p>{study.result}</p>
+    </div>
+  </div>
+
+  <p class="architecture">{study.architecture}</p>
+
+  <footer class="tag-row">
+    {study.tech.map((t) => <Tag label={t} />)}
+  </footer>
+</article>
+
+<style>
+  .study {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .study h3 {
+    font-size: 22px;
+  }
+
+  .company {
+    color: var(--accent-strong);
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  .summary {
+    color: var(--muted);
+    max-width: 72ch;
+  }
+
+  .par {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .par-cell {
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+
+  .par-result {
+    border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+    background: var(--accent-soft);
+  }
+
+  .par-cell h4 {
+    margin-bottom: var(--space-2);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-kicker);
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .par-cell p {
+    color: var(--muted);
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+
+  .par-result p {
+    color: var(--text);
+  }
+
+  /* The data flow, set in mono so it reads as a diagram rather than a sentence. */
+  .architecture {
+    padding: var(--space-3) var(--space-4);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+  @media (max-width: 900px) {
+    .par {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
