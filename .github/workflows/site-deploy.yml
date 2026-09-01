@@ -1,0 +1,98 @@
+##############################################################################
+# site-deploy — build and publish.
+#
+# Assumes the site-deploy role by OIDC. That role can write objects to one
+# bucket and invalidate one distribution, and nothing else. No long-lived AWS
+# key exists in this repository or its settings.
+#
+# The sync is three ordered stages, and the order is the point. A single
+# `aws s3 sync --delete` has two failure windows: HTML can go live referencing
+# assets that have not uploaded yet, and --delete can remove an asset that a
+# page still in someone's browser is about to request.
+##############################################################################
+
+name: site-deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/site-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      invalidate:
+        description: 'Also issue a CloudFront invalidation'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write # the only reason this workflow can reach AWS
+
+# Queue, never cancel. Two syncs interleaving over one bucket can leave a
+# half-published site; a superseded deploy that finishes first is harmless
+# because the next one overwrites it.
+concurrency:
+  group: site-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: site/.nvmrc
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+        working-directory: site
+
+      - run: npm run build
+        working-directory: site
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # Stage 1: hashed assets first, no --delete. Content-hashed filenames are
+      # immutable by construction, so a year-long cache is safe and a new build
+      # simply produces new names.
+      - name: Upload hashed assets
+        run: |
+          aws s3 sync site/dist/ "s3://${{ vars.SITE_BUCKET }}/" \
+            --exclude "*" --include "_astro/*" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --no-progress
+
+      # Stage 2: HTML and feeds, must-revalidate. CloudFront then revalidates by
+      # ETag on every request, which means routine deploys need NO invalidation
+      # and the account stays inside the 1,000 free paths a month.
+      - name: Upload documents
+        run: |
+          aws s3 sync site/dist/ "s3://${{ vars.SITE_BUCKET }}/" \
+            --exclude "_astro/*" \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --no-progress
+
+      # Stage 3: prune last, once everything new is live.
+      - name: Remove orphaned objects
+        run: |
+          aws s3 sync site/dist/ "s3://${{ vars.SITE_BUCKET }}/" \
+            --delete --no-progress
+
+      # Opt-in only. With the cache headers above this is almost never needed;
+      # if it becomes routine, the headers are wrong.
+      - name: Invalidate CloudFront
+        if: inputs.invalidate
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"

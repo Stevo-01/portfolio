@@ -1,0 +1,63 @@
+##############################################################################
+# infra-drift — monthly plan to catch console changes.
+#
+# Anything changed by hand in the AWS console is invisible until the next
+# apply, which is usually the worst moment to discover it. A scheduled plan
+# turns that into an issue on a quiet Monday instead.
+##############################################################################
+
+name: infra-drift
+
+on:
+  schedule:
+    # 07:00 UTC on the first of each month.
+    - cron: '0 7 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Detect drift
+        id: drift
+        run: |
+          terraform init
+          # -detailed-exitcode: 0 no changes, 1 error, 2 drift.
+          set +e
+          terraform plan -detailed-exitcode -no-color -out=tfplan > plan.txt 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+        working-directory: infra/envs/prod
+
+      - name: Open an issue if drifted
+        if: steps.drift.outputs.code == '2'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infra/envs/prod/plan.txt', 'utf8').slice(0, 60000);
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Infrastructure drift detected',
+              body: 'The scheduled plan found changes outside Terraform.\n\n```terraform\n' + plan + '\n```',
+            });
+
+      - name: Fail on plan error
+        if: steps.drift.outputs.code == '1'
+        run: exit 1
