@@ -235,17 +235,73 @@ data "aws_iam_policy_document" "terraform" {
       "cloudfront:*",
       "acm:*",
       "route53:*",
-      "iam:GetRole",
-      "iam:PassRole",
-      "iam:ListRolePolicies",
-      "iam:GetRolePolicy",
-      "iam:GetOpenIDConnectProvider",
       "cloudwatch:*",
       "budgets:*",
       "sns:*",
       "tag:GetResources",
     ]
     resources = ["*"]
+  }
+
+  /*
+    Read-only, and unavoidably on "*".
+
+    `data "aws_iam_openid_connect_provider"` looks the provider up by URL, and
+    the only way to do that is ListOpenIDConnectProviders, which does not accept
+    a resource scope. GetOpenIDConnectProvider alone is not enough: without the
+    List the data source cannot discover the ARN to Get, and the plan dies at
+    "reading IAM OIDC Provider" before it evaluates a single resource.
+
+    This is the account-wide singleton the stack reads and never creates. Both
+    verbs are read-only.
+  */
+  statement {
+    sid    = "ReadOidcProvider"
+    effect = "Allow"
+    actions = [
+      "iam:ListOpenIDConnectProviders",
+      "iam:GetOpenIDConnectProvider",
+    ]
+    resources = ["*"]
+  }
+
+  /*
+    IAM writes, scoped to this project's own roles.
+
+    Terraform manages the two roles in this module, so it needs to create and
+    modify them. It must not be able to touch any other role in an account that
+    also holds an unrelated live site, hence the `${var.project}-*` name scope
+    rather than "*".
+
+    ── KNOWN, ACCEPTED ────────────────────────────────────────────────────────
+    `${var.project}-*` includes the terraform role itself, so this role can
+    rewrite its own trust policy and its own inline policy. That is inherent to
+    CI that manages its own IAM and it means the role can, in principle, grant
+    itself anything the account permits. What contains it: the subject claims
+    above decide who can assume it in the first place, and the explicit Deny
+    below cannot be escaped by an inline policy. A permissions boundary on
+    these roles is the real fix and is not wired up here.
+  */
+  statement {
+    sid    = "ManageProjectRoles"
+    effect = "Allow"
+    actions = [
+      "iam:CreateRole",
+      "iam:GetRole",
+      "iam:DeleteRole",
+      "iam:UpdateAssumeRolePolicy",
+      "iam:PassRole",
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:ListRoleTags",
+      "iam:PutRolePolicy",
+      "iam:GetRolePolicy",
+      "iam:DeleteRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+    ]
+    resources = ["arn:aws:iam::*:role/${var.project}-*"]
   }
 
   /*
