@@ -20,6 +20,10 @@ dist/
 .output/
 *.tsbuildinfo
 
+# npm writes an empty lockfile here whenever npx runs from the repo root. There
+# is no root package.json, so it describes nothing and is pure noise.
+/package-lock.json
+
 # Terraform. State carries account ids and resource ARNs; .terraform/ carries
 # provider binaries measured in hundreds of megabytes.
 .terraform/

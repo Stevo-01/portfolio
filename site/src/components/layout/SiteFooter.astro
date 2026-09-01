@@ -1,5 +1,58 @@
 ---
-// STUB: owned by slice 01 (layout-chrome). No props.
+import Container from '../ui/Container.astro';
+import { profile } from '../../data/profile';
+
+const year = new Date().getFullYear();
 ---
 
-<footer data-stub="SiteFooter"><!-- STUB --></footer>
+{/*
+  The portfolio footer. Deliberately quiet: one row, no navigation, nothing
+  competing with the contact section directly above it. The journal footer is
+  the loud one, and that contrast is doing real work now that a single typeface
+  serves both halves of the site.
+*/}
+<footer class="site-footer">
+  <Container>
+    <div class="footer-row">
+      <p class="footer-copy">
+        &copy; {year} {profile.name}. {profile.tagline}
+      </p>
+      <p class="footer-credit">
+        Built with Astro. Static output on S3 and CloudFront, deployed from
+        GitHub Actions.
+      </p>
+    </div>
+  </Container>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding-block: var(--space-7);
+  }
+
+  .footer-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+  }
+
+  .footer-copy {
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .footer-credit {
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+  }
+
+  @media (max-width: 900px) {
+    .footer-row {
+      flex-direction: column;
+    }
+  }
+</style>
