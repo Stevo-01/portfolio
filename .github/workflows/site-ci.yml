@@ -61,6 +61,22 @@ jobs:
           fi
           echo "No drafts in dist/."
 
+      - name: Size budgets
+        working-directory: .
+        run: node scripts/budgets.mjs --check
+
+      - name: CSP hashes match the build
+        # A stale hash blocks the inline theme script in the browser with
+        # nothing failing server-side, so this has to be checked mechanically.
+        working-directory: .
+        run: node scripts/csp-hashes.mjs --check
+
+      - name: Lighthouse
+        working-directory: .
+        # The local binary, never `npx lhci`. `lhci` on npm is an unrelated
+        # squatted package; the real one is `@lhci/cli`, already a devDependency.
+        run: ./site/node_modules/.bin/lhci autorun --config=.github/lighthouserc.json
+
       - name: Structured data is actually rendered
         # Authoring JSON-LD and never referencing the component is a silent
         # failure: the page looks identical either way.
