@@ -40,6 +40,12 @@ jobs:
 
       # ci, not install: install would silently rewrite the lockfile and let a
       # dependency drift between what was reviewed and what is built.
+      #
+      # This is also the step that catches lockfile drift. A lock file built up
+      # by successive `npm install <pkg>` calls on one platform can omit
+      # optional dependencies another platform needs, and `npm ci` on Linux
+      # then fails with EUSAGE for packages nobody has heard of. Regenerating
+      # from scratch (rm package-lock.json && npm install) records all of them.
       - run: npm ci
 
       - name: Typecheck

@@ -115,11 +115,70 @@ resource "aws_iam_role" "terraform" {
 }
 
 data "aws_iam_policy_document" "terraform" {
+  /*
+    S3 is enumerated rather than wildcarded.
+
+    `s3:*` was the first version and trivy was right to flag it (AWS-0345): on
+    "*" resources it grants this role read and delete over every bucket in an
+    account that also holds an unrelated live site. The explicit Deny below
+    limits the damage, but a Deny is a backstop, not a design.
+
+    These are the verbs Terraform actually uses to manage a bucket, its policy
+    and its configuration sub-resources. If an apply ever fails with
+    AccessDenied on an s3 action, add that verb here rather than restoring the
+    wildcard.
+  */
+  statement {
+    sid    = "ManageBuckets"
+    effect = "Allow"
+    actions = [
+      "s3:CreateBucket",
+      "s3:DeleteBucket",
+      "s3:ListBucket",
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+      "s3:GetBucketVersioning",
+      "s3:PutBucketVersioning",
+      "s3:GetBucketPolicy",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:PutBucketPublicAccessBlock",
+      "s3:GetBucketOwnershipControls",
+      "s3:PutBucketOwnershipControls",
+      "s3:GetEncryptionConfiguration",
+      "s3:PutEncryptionConfiguration",
+      "s3:GetLifecycleConfiguration",
+      "s3:PutLifecycleConfiguration",
+      "s3:GetBucketTagging",
+      "s3:PutBucketTagging",
+      "s3:GetBucketAcl",
+      "s3:GetBucketCORS",
+      "s3:GetBucketLogging",
+      "s3:GetBucketWebsite",
+      "s3:GetAccelerateConfiguration",
+      "s3:GetBucketRequestPayment",
+      "s3:GetBucketObjectLockConfiguration",
+      "s3:GetBucketNotification",
+      "s3:GetReplicationConfiguration",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:GetObjectVersion",
+      "s3:DeleteObjectVersion",
+    ]
+    # Scoped to this project's buckets and its state bucket. Terraform has no
+    # reason to touch any other bucket in the account.
+    resources = [
+      "arn:aws:s3:::${var.project}-*",
+      "arn:aws:s3:::${var.project}-*/*",
+    ]
+  }
+
   statement {
     sid    = "ManageStack"
     effect = "Allow"
     actions = [
-      "s3:*",
       "cloudfront:*",
       "acm:*",
       "route53:*",

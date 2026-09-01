@@ -22,7 +22,8 @@ on:
 permissions:
   contents: read
   id-token: write
-  pull-requests: write # to post the plan as a comment
+  # No pull-requests: write. The plan is written to the run summary rather than
+  # posted as a comment, so the workflow needs no write access to the PR.
 
 concurrency:
   group: infra-prod
@@ -52,19 +53,35 @@ jobs:
         working-directory: infra
 
       - name: Static analysis
-        uses: aquasecurity/trivy-action@0.28.0
+        # v0.36.0, not 0.28.0. That tag does not exist and the job failed at
+        # "Set up job" before running anything, which is a confusing place to
+        # discover a typo: nothing in the workflow had executed yet.
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: infra
           exit-code: '1'
           severity: HIGH,CRITICAL
+          # Without this the ignore file is not found: the action runs from the
+          # repo root while the scan target is infra/, so a bare .trivyignore
+          # inside infra/ is never read. Every entry in it carries a written
+          # justification.
+          trivyignores: infra/.trivyignore
 
       # Cheap, and catches the failure mode that actually costs money. A static
       # site needs none of these, and a NAT Gateway alone would cost more per
       # month than the entire rest of the stack.
       - name: No expensive resources
         run: |
-          if grep -rnE "aws_vpc|nat_gateway|aws_lb\b|aws_db_instance|aws_instance\b" infra/ ; then
+          # --include='*.tf' and --exclude-dir=.terraform are both required.
+          # The Validate step above runs `terraform init`, which downloads the
+          # AWS provider binary into infra/envs/prod/.terraform/. That binary
+          # implements every AWS resource, so it contains the literal strings
+          # "aws_vpc" and "nat_gateway" and a bare recursive grep matches it.
+          # The first version of this check failed on the provider, not on any
+          # configuration.
+          if grep -rnE --include='*.tf' --exclude-dir=.terraform \
+               "aws_vpc|nat_gateway|aws_lb\b|aws_db_instance|aws_instance\b" infra/ ; then
             echo "::error::A resource that should never appear in this stack was found."
             exit 1
           fi
@@ -74,7 +91,7 @@ jobs:
       # means somebody copied an old tutorial.
       - name: No DynamoDB lock table
         run: |
-          if grep -rn "dynamodb" infra/ ; then
+          if grep -rn --include='*.tf' --exclude-dir=.terraform "dynamodb" infra/ ; then
             echo "::error::Use use_lockfile, not a DynamoDB table."
             exit 1
           fi
@@ -83,7 +100,7 @@ jobs:
       # The single most dangerous mistake available in this account.
       - name: Project prefix does not collide with the other live stack
         run: |
-          if grep -rnE '^\s*project\s*=\s*"portfolio"' infra/ ; then
+          if grep -rnE --include='*.tfvars' --exclude-dir=.terraform '^\s*project\s*=\s*"portfolio"' infra/ ; then
             echo "::error::project = \"portfolio\" collides with a different live stack in this account."
             exit 1
           fi
@@ -91,6 +108,21 @@ jobs:
 
   plan:
     needs: check
+    # Not on pull_request, and this is a deliberate limitation rather than an
+    # oversight.
+    #
+    # A plan needs AWS read access, which means assuming the terraform role.
+    # That role's trust policy pins `sub` to refs/heads/main and
+    # environment:prod; a pull_request run presents
+    # `repo:Stevo-01/portfolio:pull_request`, so STS refuses it. That refusal is
+    # correct: widening the trust to `pull_request` would let any PR assume a
+    # role that can create and destroy infrastructure.
+    #
+    # The fix worth doing later is a second, read-only `terraform-plan` role
+    # trusted on pull_request with Get/List/Describe only. Until that exists,
+    # PRs get the full `check` job (fmt, validate, tflint, trivy, the guards)
+    # which needs no credentials, and the plan runs on main before apply.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -110,23 +142,16 @@ jobs:
           terraform plan -no-color -out=tfplan | tee plan.txt
         working-directory: infra/envs/prod
 
-      - name: Comment plan on the PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('infra/envs/prod/plan.txt', 'utf8');
-            // GitHub caps a comment at 65536 characters.
-            const body = plan.length > 60000
-              ? plan.slice(0, 60000) + '\n\n... truncated, see the job log for the full plan.'
-              : plan;
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '### terraform plan\n\n```terraform\n' + body + '\n```',
-            });
+      - name: Plan summary
+        # Surfaced in the run summary rather than as a PR comment: this job no
+        # longer runs on pull_request, so there is no PR to comment on.
+        run: |
+          {
+            echo '### terraform plan'
+            echo '```terraform'
+            head -c 60000 infra/envs/prod/plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   apply:
     needs: plan

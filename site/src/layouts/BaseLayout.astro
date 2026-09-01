@@ -4,6 +4,25 @@ import Seo from '../components/seo/Seo.astro';
 import { THEME_INIT_SCRIPT } from '../lib';
 import '../styles/global.css';
 
+/*
+  Preloaded font subsets.
+
+  fontsource ships every subset at `font-display: swap`, so without a preload
+  the browser paints the fallback, then swaps Geist in and reflows. On a fast
+  machine with a warm cache that is invisible; on a cold cache and a slow CPU it
+  moved the homepage CLS to 0.093 against a 0.05 budget, and the 78px hero
+  headline is most of the shift.
+
+  Only the two latin subsets are preloaded. Preloading all eleven would push
+  cyrillic and vietnamese onto the critical path of every page for no benefit,
+  which trades one metric for another.
+
+  Imported with `?url` rather than hardcoded, because the emitted filenames are
+  content-hashed and change whenever the font package updates.
+*/
+import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMonoLatin from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
+
 interface Props {
   title: string;
   description: string;
@@ -38,6 +57,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.inv
       the browser silently refuses to run it.
     */}
     <script is:inline set:html={THEME_INIT_SCRIPT} />
+
+    {/* crossorigin is required even same-origin: fonts are fetched in CORS
+        mode, and a preload without it downloads the file twice. */}
+    <link rel="preload" href={geistLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={geistMonoLatin} as="font" type="font/woff2" crossorigin />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
