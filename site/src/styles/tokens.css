@@ -15,7 +15,16 @@
   /* --- Palette · dark (default) — DESIGN-DELTA §1 ---------------------------
      Contrast on --bg #191210: text 15.52:1, accent-2 13.67:1,
      accent-strong 10.97:1, success 10.61:1, accent 8.17:1, muted 7.18:1.
-     All AAA. --soft measures 4.98:1, which clears AA for body copy. */
+
+     ⚠️ MEASURE AGAINST THE SURFACE A TOKEN IS ACTUALLY USED ON, not just --bg.
+     --soft was #98806F, which clears AA on --bg at 4.98:1 and FAILS on
+     --surface-raised at 4.29:1 -- and card meta, the token's main use, sits on
+     exactly that surface. Lighthouse caught it; the earlier hand-check did not,
+     because it only tested the page background.
+
+     --soft is now #A89383: 6.31:1 on --bg, 5.92:1 on --surface, 5.43:1 on
+     --surface-raised. AA on all three. --muted stays a step above it at 6.18:1
+     on raised, so the hierarchy survives. */
   --bg: #191210; /* page background, deepest espresso  */
   --surface: #221816; /* alternating section bands          */
   --surface-raised: #2c1f1b; /* cards, header, popovers            */
@@ -23,7 +32,7 @@
   --border-strong: #4a362f; /* hover borders, dividers            */
   --text: #f5e9e1; /* primary copy, cream                */
   --muted: #b39d91; /* secondary copy, body paragraphs    */
-  --soft: #98806f; /* meta, timestamps, captions         */
+  --soft: #a89383; /* meta, timestamps, captions         */
   --accent: #fb923c; /* peach — links, active nav, bullets */
   --accent-strong: #fdba74; /* soft peach — hover, gradient start */
   --accent-2: #fed7aa; /* pale apricot — gradient end        */
@@ -172,7 +181,9 @@
   --border-strong: #d8c7ba;
   --text: #1b1310;
   --muted: #6b5449;
-  --soft: #93796b; /* ≥18.66px bold or ≥24px regular only. Never body copy. */
+  /* Was #93796B, which failed AA on all three light surfaces (3.59 to 4.05).
+     Now 5.49:1 on --bg, 4.97:1 on --surface, 5.61:1 on --surface-raised. */
+  --soft: #7a6355;
   --accent: #c2410c;
   --accent-strong: #9a3412;
   --accent-2: #b45309; /* gradients and large fills only — 4.45:1 on --surface */
