@@ -15,12 +15,14 @@ import { remarkReadingTime } from './plugins/remark-reading-time.mjs';
  * report the need; never reach in from another slice.
  */
 export default defineConfig({
-  // Placeholder. The real hostname is undecided — see docs/plans/DECISIONS.md
-  // D1 — and slice 09 sets it once that resolves. `example.invalid` is reserved
-  // by RFC 2606 and can never be registered, so a stray absolute URL that
-  // escapes into the built output fails loudly instead of resolving to somebody
-  // else's site.
-  site: 'https://example.invalid',
+  // Resolved. D1 chose stephen.naijora.com, covered by the already-issued
+  // *.naijora.com wildcard certificate.
+  //
+  // This drives every absolute URL the build emits: canonical links, og:image,
+  // the sitemap and the RSS feed. All four are silently wrong if it is wrong,
+  // because a browser resolves relative URLs happily and only crawlers and
+  // social scrapers notice.
+  site: 'https://stephen.naijora.com',
 
   output: 'static',
 

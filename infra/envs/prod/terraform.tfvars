@@ -31,4 +31,11 @@ monthly_budget_usd = 5
 # Filled by `node scripts/csp-hashes.mjs --write` once slice 4.3 lands. Empty
 # means script-src is omitted rather than shipping a policy that blocks the
 # inline theme-init script.
-csp_script_hashes = []
+csp_script_hashes = [
+  "sha256-/P0xZ85yoOSInNohV021oUeylP6q798IFd+kUux47Hc=",
+  "sha256-EiP6ZPePwlhDupwcdeYQxWIZCPZYuTfMQwiHgHj5G/Y=",
+  "sha256-FtTTY6wjbRschQ150xpXECL8Ibn5XLcargrzY8W5P/E=",
+  "sha256-IELQHNv9npODnM2yHfY9EqGtFRXE//knx2fZeeIdxzE=",
+  "sha256-PACpHTmhqfU8cJOcpUEe3BA9RywRAvHnZ+YcVE/ZBHk=",
+  "sha256-qWM4ddSu36P/nFFZvzoVtmoKIjBND3mpIdcoZIuTaHA=",
+]
