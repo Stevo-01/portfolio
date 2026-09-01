@@ -1,0 +1,152 @@
+##############################################################################
+# infra — validate and plan on PRs, apply behind an approval gate on merge.
+#
+# The plan job needs read access to AWS to produce a meaningful diff, so it
+# assumes the terraform role. Apply is gated on the `infra-prod` GitHub
+# Environment, which requires a human approval before it runs.
+##############################################################################
+
+name: infra
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write # to post the plan as a comment
+
+concurrency:
+  group: infra-prod
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+
+      - name: Format
+        run: terraform fmt -recursive -check -diff
+        working-directory: infra
+
+      - name: Validate
+        run: terraform init -backend=false && terraform validate
+        working-directory: infra/envs/prod
+
+      - uses: terraform-linters/setup-tflint@v4
+      - name: tflint
+        run: tflint --recursive
+        working-directory: infra
+
+      - name: Static analysis
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: infra
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+
+      # Cheap, and catches the failure mode that actually costs money. A static
+      # site needs none of these, and a NAT Gateway alone would cost more per
+      # month than the entire rest of the stack.
+      - name: No expensive resources
+        run: |
+          if grep -rnE "aws_vpc|nat_gateway|aws_lb\b|aws_db_instance|aws_instance\b" infra/ ; then
+            echo "::error::A resource that should never appear in this stack was found."
+            exit 1
+          fi
+          echo "Clean: no VPC, NAT, load balancer, database or EC2."
+
+      # Native S3 locking has replaced it since Terraform 1.10. A table here
+      # means somebody copied an old tutorial.
+      - name: No DynamoDB lock table
+        run: |
+          if grep -rn "dynamodb" infra/ ; then
+            echo "::error::Use use_lockfile, not a DynamoDB table."
+            exit 1
+          fi
+          echo "Clean: native state locking."
+
+      # The single most dangerous mistake available in this account.
+      - name: Project prefix does not collide with the other live stack
+        run: |
+          if grep -rnE '^\s*project\s*=\s*"portfolio"' infra/ ; then
+            echo "::error::project = \"portfolio\" collides with a different live stack in this account."
+            exit 1
+          fi
+          echo "Clean: project prefix is distinct."
+
+  plan:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Plan
+        id: plan
+        run: |
+          terraform init
+          terraform plan -no-color -out=tfplan | tee plan.txt
+        working-directory: infra/envs/prod
+
+      - name: Comment plan on the PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infra/envs/prod/plan.txt', 'utf8');
+            // GitHub caps a comment at 65536 characters.
+            const body = plan.length > 60000
+              ? plan.slice(0, 60000) + '\n\n... truncated, see the job log for the full plan.'
+              : plan;
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '### terraform plan\n\n```terraform\n' + body + '\n```',
+            });
+
+  apply:
+    needs: plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Requires a reviewer on the environment. CloudFront applies take five to
+    # fifteen minutes and a distribution must be disabled before it can be
+    # destroyed, so this is not a step to run casually.
+    environment: infra-prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Apply
+        run: terraform init && terraform apply -auto-approve
+        working-directory: infra/envs/prod
