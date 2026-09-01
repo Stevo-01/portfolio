@@ -52,7 +52,10 @@ jobs:
         working-directory: infra
 
       - name: Static analysis
-        uses: aquasecurity/trivy-action@0.28.0
+        # v0.36.0, not 0.28.0. That tag does not exist and the job failed at
+        # "Set up job" before running anything, which is a confusing place to
+        # discover a typo: nothing in the workflow had executed yet.
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: infra
