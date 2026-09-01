@@ -8,6 +8,12 @@ import { THEME_INIT_SCRIPT } from '../lib';
 import { absoluteUrl } from '../components/seo/meta';
 import '../styles/global.css';
 
+// The 404 builds its own <head> rather than going through BaseLayout, so it
+// needs its own preloads. Easy to miss precisely because it is the one page
+// that opts out of the shared layout.
+import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMonoLatin from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
+
 const title = 'Page not found | Stephen Adedigba';
 const description = 'That route does not exist. Here are some that do.';
 const canonical = absoluteUrl('/404', Astro.site);
@@ -42,6 +48,8 @@ const paths = [
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline set:html={THEME_INIT_SCRIPT} />
+    <link rel="preload" href={geistLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={geistMonoLatin} as="font" type="font/woff2" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <title>{title}</title>

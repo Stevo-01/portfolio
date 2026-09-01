@@ -1,0 +1,47 @@
+# Trivy exceptions.
+#
+# Two entries, each with a reason. Nothing is suppressed because it was
+# inconvenient: a scanner finding that gets silenced without an argument is
+# worse than no scanner, because the next person assumes it was considered.
+#
+# The third HIGH trivy raised, AWS-0345 (IAM role allows s3:*), is NOT here.
+# That one was a real over-permission and the policy was narrowed instead. See
+# modules/ci-oidc/main.tf.
+
+# ---------------------------------------------------------------------------
+# AWS-0132 — "Bucket does not encrypt data with a customer managed key"
+#
+# The buckets use SSE-S3 (AES256), which is server-side encryption at rest with
+# keys AWS manages. Trivy wants SSE-KMS with a customer-managed key.
+#
+# A CMK costs $1/month per key plus per-request charges. This stack's entire
+# steady-state cost is about $0.55/month, so a CMK would roughly triple it.
+#
+# What is in these buckets: the compiled output of a public website, and
+# Terraform state describing that website. The site content is served
+# unauthenticated to anyone who visits, so encrypting it with a customer-managed
+# key protects nothing that is not already public. State is more sensitive, and
+# it holds resource ARNs and an account id rather than credentials, with public
+# access blocked on all four settings and bucket-owner-enforced ownership.
+#
+# The threat a CMK actually defends against is an AWS-internal compromise of the
+# managed key hierarchy. That is not this project's threat model.
+AWS-0132
+
+# ---------------------------------------------------------------------------
+# AWS-0011 — "Distribution does not utilize a WAF"
+#
+# AWS WAF is about $5/month for the web ACL, plus per-rule and per-request
+# charges. That is roughly ten times the cost of everything else here.
+#
+# What WAF protects: injection into application logic, credential stuffing
+# against auth, abuse of a write path. This distribution serves pre-rendered
+# static files from a private S3 bucket over GET and HEAD. There is no
+# application logic, no authentication, no form, no database, and no origin that
+# can be made to do anything other than return a file that was uploaded at
+# deploy time.
+#
+# The residual risk WAF would address is volumetric abuse inflating the bill.
+# That is covered instead by the budget alert in modules/guardrails and by
+# CloudFront's own AWS Shield Standard, which is included at no cost.
+AWS-0011

@@ -61,6 +61,11 @@ jobs:
           scan-ref: infra
           exit-code: '1'
           severity: HIGH,CRITICAL
+          # Without this the ignore file is not found: the action runs from the
+          # repo root while the scan target is infra/, so a bare .trivyignore
+          # inside infra/ is never read. Every entry in it carries a written
+          # justification.
+          trivyignores: infra/.trivyignore
 
       # Cheap, and catches the failure mode that actually costs money. A static
       # site needs none of these, and a NAT Gateway alone would cost more per
