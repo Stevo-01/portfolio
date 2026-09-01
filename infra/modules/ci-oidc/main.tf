@@ -13,12 +13,37 @@ data "aws_iam_openid_connect_provider" "github" {
 
     aud = sts.amazonaws.com    -- the token was minted for AWS, not for some
                                   other service that also trusts GitHub OIDC.
-    sub = repo:owner/repo:...  -- and it came from THIS repository, on a
+    sub = repo:owner@id/repo@id:...
+                               -- and it came from THIS repository, on a
                                   specific ref or environment.
 
   A `sub` of `repo:Stevo-01/*` would let any repository in the account assume
   the role. A missing `sub` would let ANY GitHub repository on earth assume it.
   That is not a theoretical concern: the provider is public.
+
+  ── WHY THE NUMERIC IDS ARE IN THE PREFIX ─────────────────────────────────
+
+  GitHub now mints the subject with the owner and repository database ids
+  embedded, and it does so whether or not `use_immutable_subject` is set:
+
+    repo:Stevo-01@65500009/portfolio@1353605628:ref:refs/heads/main
+
+  not the name-only form this policy used to expect. A trust policy written
+  against `repo:Stevo-01/portfolio:` matches nothing, and every job that needs
+  AWS dies at "Not authorized to perform sts:AssumeRoleWithWebIdentity" while
+  jobs needing no credentials pass, which reads like a permissions bug rather
+  than a claim-format one. Confirm the live format from CloudTrail
+  (`userIdentity.principalId`) rather than from docs; it is authoritative.
+
+  This is tighter than the name form, not merely different, and the reason is
+  this repository's own history: it was deleted and recreated during the
+  build. Names are reusable, so a policy trusting `Stevo-01/portfolio` also
+  trusts whoever holds that name next. Ids are never reissued. Pinning them is
+  what makes a deleted-and-recreated repository fail closed.
+
+  Only the id form is trusted. Carrying the legacy name form alongside it as a
+  fallback would reintroduce exactly the name-reuse hole the ids close, and
+  this AWS account also hosts an unrelated live site.
 
   `StringLike` rather than `StringEquals` because the ref and environment forms
   are passed as a list and may contain a wildcard within one repo's namespace
@@ -46,7 +71,7 @@ data "aws_iam_policy_document" "trust" {
       variable = "token.actions.githubusercontent.com:sub"
       values = [
         for claim in var.subject_claims :
-        "repo:${var.github_owner}/${var.github_repo}:${claim}"
+        "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}:${claim}"
       ]
     }
   }
