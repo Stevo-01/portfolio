@@ -1,0 +1,29 @@
+{
+  "enabledMcpjsonServers": ["playwright", "aws-knowledge", "context7"],
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-draft-filter.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking draft filter"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-hex-literal.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking for hardcoded colours"
+          }
+        ]
+      }
+    ]
+  }
+}

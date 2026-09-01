@@ -1,0 +1,55 @@
+# Secrets. Never commit — this repo is public.
+.env
+.env.*
+!.env.example
+
+# The source resume: a personal document carrying a phone number and address.
+# Rooted at this repo's root, which IS steve/portfolio — do not prefix the path.
+#
+# The *published* copy is a separate, deliberate choice: slice 07 puts a resume
+# at site/public/resume.pdf, which is tracked and served. This rule covers the
+# working document sitting beside the plans, not that one.
+/Stephen_Ade_O_Resume.pdf
+
+# Build output and dependencies. site/ carries its own .gitignore too; these
+# are the root-level backstop so a stray install at the wrong depth cannot be
+# committed by a `git add -A`.
+node_modules/
+dist/
+.astro/
+.output/
+*.tsbuildinfo
+
+# Terraform. State carries account ids and resource ARNs; .terraform/ carries
+# provider binaries measured in hundreds of megabytes.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Local editor and tool state.
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+.DS_Store
+
+# Claude Code local state. settings.json IS tracked — it is the shared wiring.
+.claude/settings.local.json
+.claude/session-log.md
+.claude/worktrees/
+
+# Tool scratch output.
+.playwright-mcp/
+.lighthouseci/
+
+# Session handoffs are working notes, not project history.
+/HANDOFF.md
+
+# Build planning documents. Deliberately untracked: they describe how the repo
+# is being built rather than forming part of the shipped project, and they name
+# a reference implementation and an owner's private resume. They live on disk
+# for whoever is running the build — see docs/plans/README.md — and are backed
+# up outside the repo, not recovered from git.
+/docs/
