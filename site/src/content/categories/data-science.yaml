@@ -1,6 +1,5 @@
-# PLACEHOLDER shape only — slice 07 owns the real copy.
-# Feeds /blog/category/data-science/, the CategoryTabs strip and the discipline grid.
-# Article counts are derived at build time, never stored here.
+# Feeds /blog/category/data-science/, the CategoryTabs strip and the discipline
+# grid. The oldest discipline here, and the one the rest was built on.
 slug: data-science
 title: "Data Science"
 description: "Analysis, statistics, and making a result legible to someone who did not run it."
