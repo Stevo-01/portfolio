@@ -38,9 +38,19 @@ variable "github_repo" { type = string }
 variable "github_owner_id" { type = string }
 variable "github_repo_id" { type = string }
 
+# site-deploy.yml's deploy job declares `environment: prod` and is the role's
+# only entry point.
 variable "deploy_subject_claims" {
   type    = list(string)
-  default = ["ref:refs/heads/main", "environment:prod"]
+  default = ["environment:prod"]
+}
+
+# infra.yml enters the terraform role twice: plan on a push to main with no
+# environment, and apply under `environment: infra-prod`. Both are needed, and
+# `infra-prod` is deliberately not the same environment as the site deploy's.
+variable "terraform_subject_claims" {
+  type    = list(string)
+  default = ["ref:refs/heads/main", "environment:infra-prod"]
 }
 
 variable "csp_script_hashes" {
