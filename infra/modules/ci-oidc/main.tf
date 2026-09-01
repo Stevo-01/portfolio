@@ -50,7 +50,38 @@ data "aws_iam_openid_connect_provider" "github" {
   (for example `repo:owner/repo:pull_request`). The repository prefix is always
   literal.
 */
+locals {
+  # Identity of the repository, id-qualified. Everything trusted is built from
+  # this, so a wrong id fails every role at once rather than one obscurely.
+  sub_prefix = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}"
+
+  # ── ONE ROLE, ONE SET OF CLAIMS ──────────────────────────────────────────
+  #
+  # These were a single shared list, which quietly meant each role trusted the
+  # union of what both needed. Splitting them keeps a job from assuming a role
+  # its workflow never uses.
+  #
+  # The two roles are entered from genuinely different places:
+  #
+  #   deploy     site-deploy.yml, whose deploy job declares `environment: prod`
+  #   terraform  infra.yml, whose plan job runs on a push to main with no
+  #              environment, and whose apply job declares `environment:
+  #              infra-prod`
+  #
+  # The environment names are NOT interchangeable. `infra-prod` gates a role
+  # that can create and destroy infrastructure; `prod` gates one that can only
+  # write site objects and invalidate a distribution. Collapsing them to a
+  # single environment would put both behind the same reviewer list and let a
+  # site deploy assume the infrastructure role.
+  role_claims = {
+    deploy    = var.deploy_subject_claims
+    terraform = var.terraform_subject_claims
+  }
+}
+
 data "aws_iam_policy_document" "trust" {
+  for_each = local.role_claims
+
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -69,10 +100,7 @@ data "aws_iam_policy_document" "trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        for claim in var.subject_claims :
-        "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}:${claim}"
-      ]
+      values   = [for claim in each.value : "${local.sub_prefix}:${claim}"]
     }
   }
 }
@@ -88,7 +116,7 @@ data "aws_iam_policy_document" "trust" {
 resource "aws_iam_role" "deploy" {
   name               = "${var.project}-${var.environment}-site-deploy"
   description        = "Publishes built site objects. No infrastructure permissions."
-  assume_role_policy = data.aws_iam_policy_document.trust.json
+  assume_role_policy = data.aws_iam_policy_document.trust["deploy"].json
 }
 
 data "aws_iam_policy_document" "deploy" {
@@ -136,7 +164,7 @@ resource "aws_iam_role_policy" "deploy" {
 resource "aws_iam_role" "terraform" {
   name               = "${var.project}-${var.environment}-terraform"
   description        = "Plans and applies this stack from CI."
-  assume_role_policy = data.aws_iam_policy_document.trust.json
+  assume_role_policy = data.aws_iam_policy_document.trust["terraform"].json
 }
 
 data "aws_iam_policy_document" "terraform" {

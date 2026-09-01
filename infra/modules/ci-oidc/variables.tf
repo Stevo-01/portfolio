@@ -28,13 +28,26 @@ variable "github_repo_id" {
   }
 }
 
-variable "subject_claims" {
-  description = "Suffixes appended to repo:<owner>/<repo>: in the trust policy. Pin to a branch ref or a GitHub Environment. Never a bare wildcard."
+# Claims are per role, not shared. See the role_claims comment in main.tf for
+# why `prod` and `infra-prod` must stay distinct.
+variable "deploy_subject_claims" {
+  description = "Subject suffixes trusted by the site-deploy role. Its only entry point is site-deploy.yml's deploy job, which declares environment: prod."
   type        = list(string)
-  default     = ["ref:refs/heads/main", "environment:prod"]
+  default     = ["environment:prod"]
 
   validation {
-    condition     = !contains(var.subject_claims, "*")
+    condition     = !contains(var.deploy_subject_claims, "*")
+    error_message = "A bare \"*\" subject claim lets any workflow in the repository assume the role. Pin to a ref or an environment."
+  }
+}
+
+variable "terraform_subject_claims" {
+  description = "Subject suffixes trusted by the terraform role. infra.yml enters it twice: plan on a push to main (no environment), and apply under environment: infra-prod."
+  type        = list(string)
+  default     = ["ref:refs/heads/main", "environment:infra-prod"]
+
+  validation {
+    condition     = !contains(var.terraform_subject_claims, "*")
     error_message = "A bare \"*\" subject claim lets any workflow in the repository assume the role. Pin to a ref or an environment."
   }
 }
