@@ -1,5 +1,8 @@
 ---
-// STUB: owned by slice 02 (animated-background).
+import AuroraLayer from './AuroraLayer.astro';
+import DriftLayer from './DriftLayer.astro';
+import GridLayer from './GridLayer.astro';
+import { DEFAULT_DRIFT_ICONS } from './seed';
 import type { IconName } from '../../types/icons';
 
 interface Props {
@@ -7,9 +10,41 @@ interface Props {
   icons?: IconName[];
 }
 
-const { density = 'full', icons = [] } = Astro.props;
+const { density = 'full', icons = DEFAULT_DRIFT_ICONS } = Astro.props;
+
+// 'subtle' is aurora and grid only. Interior pages want atmosphere without a
+// drifting field competing with body copy.
+const showIcons = density === 'full' && icons.length > 0;
 ---
 
-<div data-stub="background" data-density={density} data-icons={icons.length} aria-hidden="true">
-  <!-- STUB: aurora, masked grid, drift icons and noise land in slice 02 -->
+{/*
+  Four layers, composited bottom to top:
+
+    layer 0   --bg, from the consumer
+    layer 1   aurora        CSS keyframes on transform only, GPU
+    layer 2   grid          static, radial-masked
+    layer 3   drift icons   one rAF loop, DOM transforms
+    layer 4   page content  the consumer's, above this via z-index
+
+  The noise overlay is deliberately absent: global.css already puts one on
+  body::after for the whole page. A second here would double the grain.
+
+  Fills the nearest positioned ancestor, so a consumer needs
+  `position: relative` on its hero and `position: relative; z-index: 1` on the
+  content that sits over it.
+*/}
+<div class="background-field" data-density={density} aria-hidden="true">
+  <AuroraLayer density={density} />
+  <GridLayer density={density} />
+  {showIcons && <DriftLayer icons={icons} />}
 </div>
+
+<style>
+  .background-field {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+</style>
