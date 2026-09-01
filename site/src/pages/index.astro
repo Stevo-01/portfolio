@@ -1,5 +1,6 @@
 ---
 import PortfolioLayout from '../layouts/PortfolioLayout.astro';
+import StructuredData from '../components/seo/StructuredData.astro';
 
 import About from '../components/home/About.astro';
 import Contact from '../components/home/Contact.astro';
@@ -35,6 +36,11 @@ import '../components/home/home.css';
     contact     surface
 */}
 <PortfolioLayout title={meta.title} description={meta.description}>
+  {/* Person JSON-LD. Rendered through the head slot: authoring structured
+      data and never referencing the component is a silent failure, because the
+      page looks identical either way. */}
+  <StructuredData slot="head" kind="person" />
+
   <Hero />
   <About />
   <Experience />
